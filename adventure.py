@@ -177,7 +177,9 @@ def parse(player, line):
       say('Nothing here!')
     else:
       if not words:
-        words = available[:1]
+        say('Take what?')
+      elif words[0] == 'it':
+        words = available[-1:]
       elif words[0] == 'all':
         words = available[:]
       for item in words:
@@ -187,7 +189,9 @@ def parse(player, line):
       say('You don\'t have anything to drop!')
     else:
       if not words:
-        words = player.items[:1]
+        say('Drop what?')
+      elif words[0] == 'it':
+        words = player.items[-1:]
       elif words[0] == 'all':
         words = player.items[:]
       for item in words:
