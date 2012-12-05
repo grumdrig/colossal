@@ -1,7 +1,12 @@
 inventory
 go e
 get dirt
+take dirt
 w
 i
+drop all
+i
+take 
 l
+i
 

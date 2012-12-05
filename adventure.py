@@ -105,6 +105,10 @@ class Player:
     if not brief:
       say()
       say(textwrap.fill(self.location.description))
+      if self.location.items:
+        say()
+        for item in self.location.items:
+          say('There is', item, 'here.')
 
   def inventory(self):
     if self.items:
@@ -126,6 +130,9 @@ class Player:
       say('You dont have it.')
       
   def take(self, item):
+    if len(self.items) >= 9:
+      say('You can\'t hold any more!')
+      return
     if move(item, self.location, self):
       say(item, 'taken.')
     else:
@@ -165,7 +172,26 @@ def parse(player, line):
   elif command == 'go':
     player.go(words.pop(0))
   elif command == 'take':
-    player.take(words.pop(0))
+    available = player.location.items + player.location.resources
+    if not available:
+      say('Nothing here!')
+    else:
+      if not words:
+        words = available[:1]
+      elif words[0] == 'all':
+        words = available[:]
+      for item in words:
+        player.take(item)
+  elif command == 'drop':
+    if not player.items:
+      say('You don\'t have anything to drop!')
+    else:
+      if not words:
+        words = player.items[:1]
+      elif words[0] == 'all':
+        words = player.items[:]
+      for item in words:
+        player.drop(item)
   elif command in player.location.exits.keys():
     player.go(command)
   else:
