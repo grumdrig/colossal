@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys
+import sys, getopt, textwrap
 
 # http://www.pltgames.com/
 
@@ -125,7 +125,6 @@ class Player:
     self.inventory()
 
   def look(self, brief=False):
-    import textwrap
     say(self.location.name)
     if not brief:
       say()
@@ -190,12 +189,11 @@ def Cap(s):
   return s[:1].upper() + s[1:]
 
 
-INTERACTIVE = False
+VERBOSE = False
 
 def say(*args):
-  #if INTERACTIVE:
-  m = ' '.join(args)
-  print m[:1].upper() + m[1:]
+  if VERBOSE:
+    print Cap(' '.join(args))
 
 def parse(player, line):
   ALIASES['this'] = (player.items[-1:]+['this'])[0]
@@ -261,12 +259,19 @@ def execute(player, file=None):
       parse(player, raw_input('\n> '))
 
 
-def main(args):
-  global INTERACTIVE
-  INTERACTIVE = not args
+def main():
+  global VERBOSE
+  opts,args = getopt.getopt(sys.argv[1:], 'vq')
+  VERBOSE = not args
+  for o,a in opts:
+    if o == '-v':
+      VERBOSE = True
+    elif o == '-q':
+      VERBOSE = False
 
   say('Welcome to Tarpit Adventure!')
   say()
+
   player = Player()
   
   if args:
@@ -276,4 +281,4 @@ def main(args):
     execute(player)
 
 if __name__ == '__main__':
-  main(sys.argv[1:])
+  main()
