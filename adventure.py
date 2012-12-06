@@ -81,6 +81,9 @@ Furniture('mailbox',
           capacity = 2,
           contents = ['letter'])
 
+
+MASS_NOUNS = ['dirt'];
+
 NPCs = {
   'Bograt': {
     'description': 'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.'
@@ -115,6 +118,7 @@ class Player:
     self.location = ROOMS['Dirt road']
     self.items = []
     self.capacity = 9
+    self.dead = False
 
     self.go('west')  # kinda weasly way to get to starting spot
     say()
@@ -129,15 +133,15 @@ class Player:
       if self.location.items:
         say()
         for item in self.location.items:
-          say('There is', item, 'here.')
+          say('There is', an(item), 'here.')
 
   def inventory(self):
     if self.items:
       say('You are currently holding:')
       for item in self.items:
-        say('-', item)
+        say('  ' + Cap(an(item)) + '.')
     else:
-      say('You are empty handed.')
+      say('You are empty-handed.')
 
   def go(self, direction):
     self.location = ROOMS[self.location.exits[direction]]
@@ -166,11 +170,24 @@ def move(item, source, dest):
       dest.items.append(item)
       return True
   if hasattr(source, 'resources') and item in source.resources:
+    if item in MASS_NOUNS and item in dest.items:
+      say('You already have', an(item) + '.')
+      return False
     dest.items.append(item)
     return True
   say('What', item, 'now?')
   return False
 
+def an(item):
+  if item in MASS_NOUNS:
+    return 'some ' + item
+  elif item[0] in 'aeiou':
+    return 'an ' + item
+  else:
+    return 'a ' + item
+
+def Cap(s):
+  return s[:1].upper() + s[1:]
 
 
 INTERACTIVE = False
@@ -184,7 +201,6 @@ def parse(player, line):
   ALIASES['this'] = (player.items[-1:]+['this'])[0]
   ALIASES['that'] = (player.location.items[-1:]+['that'])[0]
   words = [ALIASES.get(word,word) for word in line.lower().split()]
-  print line
   if not words:
     say('Huh?')
     return
@@ -235,13 +251,14 @@ def parse(player, line):
     say('I did not understand that command.')
     
 
-def execute(player, file):
-  if not INTERACTIVE:
-    print '\n>',
-  for line in file.readlines():
-    parse(player, line)
-    if not INTERACTIVE:
-      print '\n>',
+def execute(player, file=None):
+  if file:
+    for line in file.readlines():
+      say('\n>', line)
+      parse(player, line)
+  else:
+    while not player.dead:
+      parse(player, raw_input('\n> '))
 
 
 def main(args):
@@ -256,7 +273,7 @@ def main(args):
     for i in args:
       execute(player, open(i,'r'))
   else:
-    execute(player, sys.stdin)
+    execute(player)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
