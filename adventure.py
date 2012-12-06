@@ -25,7 +25,7 @@ class Room:
   def describe(self, brief=False):
     result = self.name
     if not brief:
-      result += '\n' + textwrap.fill(self.description)
+      result += '\n' + self.description
       for item in self.items:
         result += '\nThere is ' + an(item) + ' here.'
     return result
@@ -66,6 +66,9 @@ Room('Grassy knoll',
      'A path leading from the northwest gives onto a grassy knoll. Upon the knoll is a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
      { 'northwest': 'Fork in the road' })
 
+Room('Deep grass',
+     'The grass here is deep. It\'s like a needle in a haystack, minus the needle in here.',
+     { 'out': 'Grassy knoll' })
 
 class Furniture:
   def __init__(self, name, description, location,
@@ -109,15 +112,26 @@ class Npc:
   def __init__(self, name, description, location):
     self.name = name
     self.description = description
+    self.capacity = 9
     ROOMS[location].inhabitants[name.lower()] = self
 
   def describe(self):
     return self.description
-    
 
-Npc('Bograt',
-    'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
-    'Grassy knoll');
+  def welcome(self, whom):
+    pass
+
+
+class Bograt(Npc):
+  def welcome(self, whom):
+    item = whom.items and whom.items[0]
+    if item and move(item, whom, ROOMS['Deep grass']):
+      say('Goddamn that Bograt. He stole your', item + '. Then he tossed it somewhere into the deep grass.')
+
+Bograt('Bograt',
+       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
+       'Grassy knoll');
+    
 
 ITEMS = {}
 
@@ -186,6 +200,8 @@ class Player:
     self.location = ROOMS[self.location.exits[direction]]
     say(self.location.describe(self.location.visited))
     self.location.visited = True
+    for npc in self.location.inhabitants.values():
+      npc.welcome(self)
 
   def drop(self, item):
     if move(item, self, self.location):
@@ -234,7 +250,8 @@ VERBOSE = False
 
 def say(*args):
   if VERBOSE:
-    print Cap(' '.join(args))
+    for s in Cap(' '.join(args)).split('\n'):
+      print textwrap.fill(s)
 
 
 def parse(player, line):
