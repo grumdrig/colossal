@@ -106,15 +106,27 @@ Furniture('tar pit',
 
 MASS_NOUNS = ['dirt'];
 
-ITEMS = {}
+ITEMS = {
+  #'dirt': { 'mass': True },
+  }
 
 class Item:
-  def __init__(self, name, description, mass=False):
+  def __init__(self, name, mass=False):
     self.name = name
-    self.description = description
     self.mass = mass
     ITEMS[name] = self
-    
+
+  def describe(self):
+    return 'Just ' + self.an('ordinary') + '.'
+
+  def an(self, adj=None):
+    article = 'some' if self.mass else 'an' if item[0] in 'aeiou' else 'a'
+    return ' '.join([article, adj, self.name] if adj else [articles, self.name])
+
+
+Item('dirt', mass=True)
+Item('paper')
+
 
 class Entity:
   def __init__(self, name, description, location):
@@ -137,8 +149,9 @@ class Entity:
       return self.location.furniture[item]
     elif item in self.location.inhabitants:
       return self.location.inhabitants[item]
-    else:
-      say('What ' + item + '?')
+    elif (item in ITEMS and
+          item in (self.items + self.location.items + self.location.resources)):
+      return ITEMS[item]
 
   def inventory(self):
     if self.items:
@@ -189,7 +202,8 @@ class Entity:
       say(self.location.describe())
 
     elif command == 'examine':
-      say(self.resolve(words[0]).describe())
+      thing = self.resolve(words[0])
+      say(thing.describe() if thing else 'What ' + words[0] + '?')
 
     elif command == 'go':
       self.go(words.pop(0))
