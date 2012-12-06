@@ -6,6 +6,7 @@ import sys
 
 
 ROOMS = {}
+FURNITURE = {}
 
 class Room:
   def __init__(self, name, description, exits,
@@ -18,6 +19,7 @@ class Room:
     self.inhabitants = inhabitants or []
     self.items = items or []
     self.visited = False
+    self.capacity = float('inf')
     ROOMS[name] = self
 
 Room('Outside of a small house',
@@ -26,7 +28,6 @@ Room('Outside of a small house',
        'west': 'Tar pit',
        'in': 'Inside the small house',
        },
-     furniture = { 'mailbox': {'open': False, 'contains': ['letter']} },
      )
 
 Room('Inside the small house',
@@ -65,6 +66,21 @@ Room('Grassy knoll',
      )
 
 
+class Furniture:
+  def __init__(self, name, description, location,
+               capacity=0, contents=None):
+    self.name = name
+    self.description = description
+    self.capacity = capacity
+    self.items = contents or []
+    ROOMS[location].furniture[name] = self
+
+Furniture('mailbox',
+          'A fairly ordinary mailbox, used mostly to mail receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
+          'Outside of a small house',
+          capacity = 2,
+          contents = ['letter'])
+
 NPCs = {
   'Bograt': {
     'description': 'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.'
@@ -72,9 +88,11 @@ NPCs = {
   }
 
 
+
 ALIASES = {
   'walk': 'go',
   'get': 'take',
+  'grab': 'take',
   'throw': 'drop',
   'i': 'inventory',
   'l': 'look',
@@ -88,14 +106,17 @@ ALIASES = {
   'sw': 'southwest',
   'exit': 'out',
   'enter': 'in',
+  'into': 'in',
+  'inside': 'in',
 }
 
 class Player:
   def __init__(self):
     self.location = ROOMS['Dirt road']
     self.items = []
+    self.capacity = 9
 
-    self.go('west')
+    self.go('west')  # kinda weasly way to get to starting spot
     say()
     self.inventory()
 
@@ -130,9 +151,6 @@ class Player:
       say('You dont have it.')
       
   def take(self, item):
-    if len(self.items) >= 9:
-      say('You can\'t hold any more!')
-      return
     if move(item, self.location, self):
       say(item, 'taken.')
     else:
@@ -140,6 +158,12 @@ class Player:
 
 
 def move(item, source, dest):
+  if dest.capacity <= 0:
+    say('Not a container!')
+    return False
+  if len(dest.items) >= dest.capacity:
+    say('No more room!')
+    return False
   for i in range(len(source.items)):
     if source.items[i] == item:
       source.items[i:1] = []
@@ -148,6 +172,7 @@ def move(item, source, dest):
   if hasattr(source, 'resources') and item in source.resources:
     dest.items.append(item)
     return True
+  say('What', item, 'now?')
   return False
 
 
@@ -156,21 +181,28 @@ INTERACTIVE = False
 
 def say(*args):
   #if INTERACTIVE:
-  print ' '.join(args).capitalize()
+  m = ' '.join(args)
+  print m[:1].upper() + m[1:]
 
 def parse(player, line):
+  ALIASES['this'] = (player.items[-1:]+['this'])[0]
+  ALIASES['that'] = (player.location.items[-1:]+['that'])[0]
   words = [ALIASES.get(word,word) for word in line.lower().split()]
   print line
   if not words:
     say('Huh?')
     return
   command = words.pop(0)
+
   if command == 'inventory':
     player.inventory()
+
   elif command == 'look':
     player.look()
+
   elif command == 'go':
     player.go(words.pop(0))
+
   elif command == 'take':
     available = player.location.items + player.location.resources
     if not available:
@@ -178,26 +210,30 @@ def parse(player, line):
     else:
       if not words:
         say('Take what?')
-      elif words[0] == 'it':
-        words = available[-1:]
       elif words[0] == 'all':
         words = available[:]
       for item in words:
         player.take(item)
+
   elif command == 'drop':
     if not player.items:
       say('You don\'t have anything to drop!')
     else:
       if not words:
         say('Drop what?')
-      elif words[0] == 'it':
-        words = player.items[-1:]
       elif words[0] == 'all':
         words = player.items[:]
       for item in words:
         player.drop(item)
+
+  elif command == 'put' and len(words) >= 3 and words[1] == 'in':
+    dest = player.location.furniture[words[2]]
+    if move(words[0], player, dest):
+      say('Now', words[0], 'is in', words[2] + '.')
+    
   elif command in player.location.exits.keys():
     player.go(command)
+
   else:
     say('I did not understand that command.')
     
