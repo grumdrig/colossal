@@ -123,7 +123,6 @@ class Entity:
     self.location = None
     self.items = []
     self.capacity = 9
-    self.dead = False
     self.go(ROOMS[location])
 
   def describe(self):
@@ -171,6 +170,85 @@ class Entity:
   def welcome(self, whom):
     pass
 
+  def parse(self, line):
+    ALIASES['this'] = (self.items[-1:]+['this'])[0]
+    ALIASES['that'] = (self.location.items[-1:]+['that'])[0]
+    words = [ALIASES.get(word,word) for word in line.strip().lower().split()]
+    if not words:
+      return True
+    command = words.pop(0)
+
+    if command == 'quit':
+      say('Goodbye!')
+      return False
+
+    elif command == 'inventory':
+      self.inventory()
+
+    elif command == 'look':
+      say(self.location.describe())
+
+    elif command == 'examine':
+      say(self.resolve(words[0]).describe())
+
+    elif command == 'go':
+      self.go(words.pop(0))
+
+    elif command == 'take':
+      available = self.location.items + self.location.resources
+      if not available:
+        say('Nothing here!')
+      else:
+        if not words:
+          say('Take what?')
+        elif words[0] == 'all':
+          words = available[:]
+        for item in words:
+          self.take(item)
+
+    elif command == 'drop':
+      if not self.items:
+        say('You don\'t have anything to drop!')
+      else:
+        if not words:
+          say('Drop what?')
+        elif words[0] == 'all':
+          words = self.items[:]
+        for item in words:
+          self.drop(item)
+
+    elif command == 'put' and len(words) >= 3 and words[1] == 'in':
+      dest = self.location.furniture[words[2]]
+      if move(words[0], self, dest):
+        say('You put the', words[0], 'in the', words[2] + '.')
+
+    elif command == 'write':
+      if 'pen' not in self.items:
+        say('You lack a writing implement.')
+      else:
+        unimplemented()
+
+    elif command in self.location.exits.keys():
+      # just a direction. "go" is implied
+      self.go(command)
+
+    else:
+      say('I did not understand that command.')
+
+    return True
+
+  def execute(self, file=None):
+    if file:
+      for line in file.readlines():
+        say('\n>', line.strip())
+        if not self.parse(line):
+          break
+    else:
+      while True:
+        if not self.parse(raw_input('\n> ')):
+          break
+
+    
 
 class Bograt(Entity):
   def welcome(self, whom):
@@ -265,79 +343,6 @@ ALIASES = {
   'yourself': 'self',
 }
 
-def parse(player, line):
-  ALIASES['this'] = (player.items[-1:]+['this'])[0]
-  ALIASES['that'] = (player.location.items[-1:]+['that'])[0]
-  words = [ALIASES.get(word,word) for word in line.strip().lower().split()]
-  if not words:
-    return True
-  command = words.pop(0)
-
-  if command == 'quit':
-    say('Goodbye!')
-    return False
-
-  elif command == 'inventory':
-    player.inventory()
-
-  elif command == 'look':
-    say(player.location.describe())
-
-  elif command == 'examine':
-    say(player.resolve(words[0]).describe())
-
-  elif command == 'go':
-    player.go(words.pop(0))
-
-  elif command == 'take':
-    available = player.location.items + player.location.resources
-    if not available:
-      say('Nothing here!')
-    else:
-      if not words:
-        say('Take what?')
-      elif words[0] == 'all':
-        words = available[:]
-      for item in words:
-        player.take(item)
-
-  elif command == 'drop':
-    if not player.items:
-      say('You don\'t have anything to drop!')
-    else:
-      if not words:
-        say('Drop what?')
-      elif words[0] == 'all':
-        words = player.items[:]
-      for item in words:
-        player.drop(item)
-
-  elif command == 'put' and len(words) >= 3 and words[1] == 'in':
-    dest = player.location.furniture[words[2]]
-    if move(words[0], player, dest):
-      say('You put the', words[0], 'in the', words[2] + '.')
-    
-  elif command in player.location.exits.keys():
-    # just a direction. "go" is implied
-    player.go(command)
-
-  else:
-    say('I did not understand that command.')
-
-  return True
-    
-
-def execute(player, file=None):
-  if file:
-    for line in file.readlines():
-      say('\n>', line.strip())
-      if not parse(player, line):
-        break
-  else:
-    while not player.dead:
-      if not parse(player, raw_input('\n> ')):
-        break
-
 
 def main():
   global VERBOSE
@@ -357,9 +362,9 @@ def main():
   
   if args:
     for i in args:
-      execute(player, open(i,'r'))
+      player.execute(open(i,'r'))
   else:
-    execute(player)
+    player.execute()
 
 if __name__ == '__main__':
   main()
