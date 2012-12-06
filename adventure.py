@@ -147,14 +147,10 @@ class Player:
   def drop(self, item):
     if move(item, self, self.location):
       say(item, 'dropped.')
-    else:
-      say('You dont have it.')
       
   def take(self, item):
     if move(item, self.location, self):
       say(item, 'taken.')
-    else:
-      say('That isn\'t here to be taken.')
 
 
 def move(item, source, dest):
@@ -232,6 +228,7 @@ def parse(player, line):
       say('Now', words[0], 'is in', words[2] + '.')
     
   elif command in player.location.exits.keys():
+    # just a direction. "go" is implied
     player.go(command)
 
   else:

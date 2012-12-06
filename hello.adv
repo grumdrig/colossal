@@ -2,17 +2,13 @@ inventory
 go e
 get dirt
 take dirt
-take dirt
 w
 i
 drop all
 i
 take that
-take dirt
-take dirt
 l
 i
-put dirt in mailbox
 put dirt in mailbox
 put dirt in mailbox
 
