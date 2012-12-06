@@ -22,6 +22,17 @@ class Room:
     self.capacity = float('inf')
     ROOMS[name] = self
 
+  def describe(self, brief=False):
+    say(self.name)
+    if not brief:
+      say()
+      say(textwrap.fill(self.description))
+      if self.items:
+        say()
+        for item in self.location.items:
+          say('There is', an(item), 'here.')
+          
+
 Room('Outside of a small house',
      'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white. There is a mailbox here.',
      { 'east': 'Dirt road',
@@ -75,12 +86,22 @@ class Furniture:
     self.items = contents or []
     ROOMS[location].furniture[name] = self
 
+  def describe(self, brief=False):
+    if brief:
+      say(an(self.name))
+    else:
+      say(self.description)
+
 Furniture('mailbox',
           'A fairly ordinary mailbox, used mostly to mail receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
           'Outside of a small house',
           capacity = 2,
           contents = ['letter'])
 
+class Item:
+  def __init__(self, name, mass=False):
+    self.name = name
+    self.mass = mass
 
 MASS_NOUNS = ['dirt'];
 
@@ -111,6 +132,8 @@ ALIASES = {
   'enter': 'in',
   'into': 'in',
   'inside': 'in',
+  'me': 'self',
+  'myself': 'self',
 }
 
 class Player:
@@ -124,7 +147,21 @@ class Player:
     say()
     self.inventory()
 
-  def look(self, brief=False):
+  def describe(self):
+    return 'You are you. That\'s just who you are.'
+
+  def resolve(self, item):
+    if item == 'self':
+      return self
+    elif item == 'here':
+      return self.location
+    elif item in self.location.furniture:
+      return self.location.furniture[item]
+    else:
+      say('What ' + item + '?')
+
+  def look(self, item, brief=False):
+    item.describe()
     say(self.location.name)
     if not brief:
       say()
@@ -144,7 +181,7 @@ class Player:
 
   def go(self, direction):
     self.location = ROOMS[self.location.exits[direction]]
-    self.look(self.location.visited)
+    self.location.describe(self.location.visited)
     self.location.visited = True
 
   def drop(self, item):
@@ -208,7 +245,10 @@ def parse(player, line):
     player.inventory()
 
   elif command == 'look':
-    player.look()
+    player.location.describe()
+
+  elif command == 'examine':
+    player.resolve(words[0]).describe()
 
   elif command == 'go':
     player.go(words.pop(0))
