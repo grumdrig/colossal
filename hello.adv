@@ -5,6 +5,7 @@ take dirt
 w
 i
 drop all
+l
 i
 take that
 l
@@ -13,3 +14,9 @@ put dirt in mailbox
 put dirt in mailbox
 
 examine mailbox
+
+e
+e
+se
+examine bograt
+
