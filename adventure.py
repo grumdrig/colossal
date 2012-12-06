@@ -18,7 +18,6 @@ class Room:
     self.resources = resources or []
     self.inhabitants = {}
     self.items = items or []
-    self.visited = False
     self.capacity = float('inf')
     ROOMS[name] = self
 
@@ -88,50 +87,24 @@ class Furniture:
 Furniture('mailbox',
           'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
           'Outside of a small house',
-          capacity = 2,
-          closed = True,
-          contents = ['letter'])
+          capacity=2,
+          closed=True,
+          contents=['letter'])
 
 Furniture('trophy case',
           'This handsome trophy case features space to display up to three treasured items.',
           'Inside the small house',
-          capacity = 3,
-          closed = True,
-          locked = True);
+          capacity=3,
+          closed=True,
+          locked=True);
 
 Furniture('tar pit',
           'The tar pit emits noxious fumes and bubbles langoriously from time to time.',
           'Tar pit',
-          capacity = float('inf'));
+          capacity=float('inf'));
 
 
 MASS_NOUNS = ['dirt'];
-
-
-class Npc:
-  def __init__(self, name, description, location):
-    self.name = name
-    self.description = description
-    self.capacity = 9
-    ROOMS[location].inhabitants[name.lower()] = self
-
-  def describe(self):
-    return self.description
-
-  def welcome(self, whom):
-    pass
-
-
-class Bograt(Npc):
-  def welcome(self, whom):
-    item = whom.items and whom.items[0]
-    if item and move(item, whom, ROOMS['Deep grass']):
-      say('Goddamn that Bograt. He stole your', item + '. Then he tossed it somewhere into the deep grass.')
-
-Bograt('Bograt',
-       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
-       'Grassy knoll');
-    
 
 ITEMS = {}
 
@@ -140,41 +113,21 @@ class Item:
     self.name = name
     self.description = description
     self.mass = mass
+    ITEMS[name] = self
     
 
-ALIASES = {
-  'walk': 'go',
-  'get': 'take',
-  'grab': 'take',
-  'throw': 'drop',
-  'i': 'inventory',
-  'l': 'look',
-  'n': 'north',
-  's': 'south',
-  'e': 'east',
-  'w': 'west',
-  'ne': 'northeast',
-  'nw': 'northwest',
-  'se': 'southeast',
-  'sw': 'southwest',
-  'exit': 'out',
-  'enter': 'in',
-  'into': 'in',
-  'inside': 'in',
-  'me': 'self',
-  'myself': 'self',
-}
-
-class Player:
-  def __init__(self):
-    self.location = ROOMS['Outside of a small house']
+class Entity:
+  def __init__(self, name, description, location):
+    self.name = name
+    self.description = description
+    self.location = None
     self.items = []
     self.capacity = 9
     self.dead = False
-    say(self.location.describe())
+    self.go(ROOMS[location])
 
   def describe(self):
-    return 'You are you. That\'s just who you are.'
+    return self.description
 
   def resolve(self, item):
     if item == 'self':
@@ -196,10 +149,14 @@ class Player:
     else:
       say('You are empty-handed.')
 
-  def go(self, direction):
-    self.location = ROOMS[self.location.exits[direction]]
-    say(self.location.describe(self.location.visited))
-    self.location.visited = True
+  def go(self, location):
+    if self.location:
+      del self.location.inhabitants[self.name.lower()]
+      if isinstance(location, str):
+        location = ROOMS[self.location.exits[location]]
+      say(location.describe(location.name in self.visited))
+    self.location = location
+    self.location.inhabitants[self.name.lower()] = self
     for npc in self.location.inhabitants.values():
       npc.welcome(self)
 
@@ -210,6 +167,36 @@ class Player:
   def take(self, item):
     if move(item, self.location, self):
       say(item, 'taken.')
+
+  def welcome(self, whom):
+    pass
+
+
+class Bograt(Entity):
+  def welcome(self, whom):
+    if self != whom:
+      item = whom.items and whom.items[0]
+      if item and move(item, whom, ROOMS['Deep grass']):
+        say('Goddamn that Bograt. He stole your', item + '. Then he tossed it somewhere into the deep grass.')
+
+
+Bograt('Bograt',
+       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
+       'Grassy knoll');
+
+
+class Player(Entity):
+  def __init__(self, location):
+    self.visited = set()
+    Entity.__init__(self,
+                    "You",
+                    "You are you. That's just who you are.",
+                    location)
+
+  def welcome(self, whom):
+    if self == whom:
+      self.visited.add(self.location.name)
+  
 
 
 def move(item, source, dest):
@@ -253,6 +240,30 @@ def say(*args):
     for s in Cap(' '.join(args)).split('\n'):
       print textwrap.fill(s)
 
+
+ALIASES = {
+  'walk': 'go',
+  'get': 'take',
+  'grab': 'take',
+  'throw': 'drop',
+  'i': 'inventory',
+  'l': 'look',
+  'n': 'north',
+  's': 'south',
+  'e': 'east',
+  'w': 'west',
+  'ne': 'northeast',
+  'nw': 'northwest',
+  'se': 'southeast',
+  'sw': 'southwest',
+  'exit': 'out',
+  'enter': 'in',
+  'into': 'in',
+  'inside': 'in',
+  'me': 'self',
+  'myself': 'self',
+  'yourself': 'self',
+}
 
 def parse(player, line):
   ALIASES['this'] = (player.items[-1:]+['this'])[0]
@@ -341,7 +352,8 @@ def main():
   say('Welcome to Tarpit Adventure!')
   say()
 
-  player = Player()
+  player = Player('Outside of a small house')
+  say(player.location.describe())
   
   if args:
     for i in args:
