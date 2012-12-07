@@ -101,6 +101,20 @@ class Item:
       q.pop(0)
     return result
     
+  def move(self, dest):
+    if dest and (dest.capacity <= 0):
+      say('Not a container!')
+      return False
+    if dest and (len(dest.items) >= dest.capacity):
+      say('No more room!')
+      return False
+    if self.location:
+      self.location.items.remove(self)
+    if dest:
+      dest.items.append(self)
+    self.location = dest
+    return True
+
 
 
 class Entity:
@@ -180,7 +194,7 @@ class Entity:
         say("I can't take what ain't there.")
       else:
         for item in items:
-          if move(item, self):
+          if item.move(self):
             say(str(item), 'taken.')
 
     elif command == 'drop':
@@ -189,7 +203,7 @@ class Entity:
         say("You can't drop what you ain't got.")
       else:
         for item in items:
-          if move(item, self.location):
+          if item.move(self.location):
             say(str(item), 'dropped.')
 
     elif command == 'put' and len(words) >= 3 and words[1] == 'in':
@@ -199,7 +213,7 @@ class Entity:
         say("You can't put what you ain't got.")
       else:
         for item in items:
-          if move(item, dest):
+          if item.move(dest):
             say('You put the ' + str(item) + ' in the ' + str(dest) + '.')
 
     elif command == 'write':
@@ -215,7 +229,7 @@ class Entity:
         say('Dig in what?')
       else:
         item = Item(self.location.resources[command], True)
-        if move(item, self):
+        if item.move(self):
           say('You dig up some ' + str(item) +
               ' and add it to your inventory.');
 
@@ -317,26 +331,13 @@ class Bograt(Entity):
   def welcome(self, whom):
     if self != whom:
       item = whom.items and whom.items[0]
-      if item and move(item, ROOMS['Deep grass']):
+      if item and item.move(ROOMS['Deep grass']):
         say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
 
 Bograt('Bograt',
        'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
        'Grassy knoll');
 
-
-def move(item, dest):
-  if dest.capacity <= 0:
-    say('Not a container!')
-    return False
-  if len(dest.items) >= dest.capacity:
-    say('No more room!')
-    return False
-  if item.location:
-    item.location.items.remove(item)
-  dest.items.append(item)
-  item.location = dest
-  return True
 
 
 def Cap(s):
