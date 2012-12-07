@@ -20,9 +20,11 @@ class Room:
     self.furniture = {}
     self.resources = resources or {}
     self.inhabitants = {}
-    self.items = [Item(item) for item in items or []]
+    self.items = []
     self.capacity = float('inf')
     ROOMS[name] = self
+    for item in items or []:
+      Item(item).move(self)
 
   def __str__(self):
     return self.name
@@ -81,13 +83,17 @@ class Item:
     else:
       self.type = type
       self.adjective = adj and random.choice(ADJECTIVES)
+    self.name = None
     self.location = None
     self.writing = None
     mass = type in MASS_NOUNS
     self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
 
   def __str__(self):
-    return (self.adjective + ' ' if self.adjective else '') + self.type
+    result = (self.adjective + ' ' if self.adjective else '') + self.type
+    if self.name:
+      result += ' called "' + self.name + '"'
+    return result
 
   def describe(self, brief=False):
     if brief:
@@ -108,8 +114,11 @@ class Item:
     elif q[0] == 'it':
       q.pop(0)
       return self
+    elif q[0] == self.name:
+      q.pop(0)
+      return self
     result = None
-    if q and q[0] == self.adjective:
+    if q[0] == self.adjective:
       result = self
       q.pop(0)
     if q and q[0] == self.type:
@@ -130,7 +139,6 @@ class Item:
       dest.items.append(self)
     self.location = dest
     return True
-
 
 
 class Entity:
@@ -223,6 +231,15 @@ class Entity:
           if item.move(self.location):
             say(str(item), 'dropped.')
 
+    elif command == 'call':
+      items = find(words, self)
+      if len(items) != 1:
+        say("Call what what?")
+      elif not words:
+        say ('Call it what?')
+      else:
+        items[0].name = words[0]
+      
     elif command == 'put' and len(words) >= 3 and words[1] == 'in':
       dest = self.location.furniture[words[2]]
       items = find(words, self)
