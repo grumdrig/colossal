@@ -24,6 +24,9 @@ class Room:
     self.capacity = float('inf')
     ROOMS[name] = self
 
+  def __str__(self):
+    return self.name
+
   def describe(self, brief=False):
     result = self.name
     if not brief:
@@ -44,6 +47,9 @@ class Furniture:
     self.locked = locked
     ROOMS[location].furniture[name] = self
 
+  def __str__(self):
+    return self.name
+
   def describe(self, brief=False):
     return 'the ' + self.name if brief else self.description
 
@@ -63,19 +69,14 @@ class Item:
   def __init__(self, type, adj=False):
     self.type = type
     self.adjective = adj and random.choice(ADJECTIVES)
-    self.mass = type in MASS_NOUNS
+    mass = type in MASS_NOUNS
+    self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
 
   def __str__(self):
     return (self.adjective + ' ' if self.adjective else '') + self.type
 
   def describe(self, brief=False):
-    result = [] if brief else ['Just'];
-    result.append(self.an())
-    if self.adjective: result.append(self.adjective)
-    return ' '.join(result + [self.type])
-
-  def an(self):
-    return 'some' if self.mass else 'an' if self.type[0] in 'aeiou' else 'a'
+    return ('' if brief else 'Just ') + self.an + ' ' + str(self)
 
   def match(self, q):
     if not q:
@@ -193,7 +194,7 @@ class Entity:
       else:
         for item in items:
           if move(item, self, dest):
-            say('You put the', item.describe(True), 'in the', words[2] + '.')
+            say('You put the ' + str(item) + ' in the ' + str(dest) + '.')
 
     elif command == 'write':
       if not find(['pen'], self):
