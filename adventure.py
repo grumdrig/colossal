@@ -66,15 +66,23 @@ ADJECTIVES = [
   'unexceptional', 'bland', 'conventional', 'mundane', 'ordinary',
   'stereotypical', 'boilerplate', 'characterless', 'prosaic', 'unnoteworthy']
 
+INSCRIBED = [
+  'inscribed', 'written-upon', 'marked-up', 'filled-in', 'used',
+  'readable'
+  ]
 
 MASS_NOUNS = ['dirt'];
 
 
 class Item:
   def __init__(self, type, adj=False):
-    self.type = type
-    self.adjective = adj and random.choice(ADJECTIVES)
+    if len(type.split(' ')) > 1:
+      self.adjective, self.type = type.split(' ')
+    else:
+      self.type = type
+      self.adjective = adj and random.choice(ADJECTIVES)
     self.location = None
+    self.writing = None
     mass = type in MASS_NOUNS
     self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
 
@@ -82,7 +90,15 @@ class Item:
     return (self.adjective + ' ' if self.adjective else '') + self.type
 
   def describe(self, brief=False):
-    return ('' if brief else 'Just ') + self.an + ' ' + str(self)
+    if brief:
+      return self.an + ' ' + str(self)
+    elif self.writing:
+      result = self.an + ' ' + str(self) + '. Written on it, it says:'
+      for line in self.writing:
+        result += '\n  ' + line
+      return result
+    else:
+      return 'Just ' + self.an + ' ' + str(self)
 
   def match(self, q):
     if not q:
@@ -141,7 +157,8 @@ class Entity:
     elif item in self.location.inhabitants:
       return self.location.inhabitants[item]
     else:
-      return find([item], self) or find([item], self.location)
+      items = find([item], self) or find([item], self.location)
+      return items and items[0] or None
 
   def inventory(self):
     if self.items:
@@ -244,7 +261,15 @@ class Entity:
       if not find(['pen'], self):
         say('You lack a writing implement.')
       else:
-        unimplemented()
+        papers = find(['blank'], self)
+        if not papers:
+          say('You need some blank paper to write on.')
+        elif not words:
+          say('What do you want to write?')
+        else:
+          paper = papers[0]
+          paper.writing = [line.strip() for line in ' '.join(words).split(';')]
+          paper.adjective = random.choice(INSCRIBED)
 
     elif command == 'dig':
       if not find(['shovel'], self):
@@ -299,6 +324,7 @@ Room('Outside of a small house',
        'west': 'Tar pit',
        'in': 'Inside the small house',
        },
+     items=['blank paper', 'pen'],
      )
 
 Room('Inside the small house',
