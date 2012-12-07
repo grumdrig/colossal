@@ -51,7 +51,12 @@ class Furniture:
     return self.name
 
   def describe(self, brief=False):
-    return 'the ' + self.name if brief else self.description
+    result = 'the ' + self.name if brief else self.description
+    if not brief and self.items:
+      result += '\nThe ' + self.name + ' contains:'
+      for item in self.items:
+        result += '\n  ' + Cap(item.describe(True)) + '.'
+    return result
 
 
 ADJECTIVES = [
@@ -69,6 +74,7 @@ class Item:
   def __init__(self, type, adj=False):
     self.type = type
     self.adjective = adj and random.choice(ADJECTIVES)
+    self.location = None
     mass = type in MASS_NOUNS
     self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
 
@@ -159,10 +165,7 @@ class Entity:
       self.inventory()
 
     elif command == 'look':
-      say(self.location.describe())
-
-    elif command == 'examine':
-      thing = self.resolve(words)
+      thing = self.resolve(words) if words else self.location
       say(thing.describe() if thing else 'What ' + words[0] + '?')
 
     elif command == 'go':
@@ -170,11 +173,14 @@ class Entity:
 
     elif command == 'take':
       items = find(words, self.location)
+      for furn in self.location.furniture.values():
+        if not items:
+          items = find(words, furn)
       if not items:
         say("I can't take what ain't there.")
       else:
         for item in items:
-          if move(item, self.location, self):
+          if move(item, self):
             say(str(item), 'taken.')
 
     elif command == 'drop':
@@ -183,7 +189,7 @@ class Entity:
         say("You can't drop what you ain't got.")
       else:
         for item in items:
-          if move(item, self, self.location):
+          if move(item, self.location):
             say(str(item), 'dropped.')
 
     elif command == 'put' and len(words) >= 3 and words[1] == 'in':
@@ -193,7 +199,7 @@ class Entity:
         say("You can't put what you ain't got.")
       else:
         for item in items:
-          if move(item, self, dest):
+          if move(item, dest):
             say('You put the ' + str(item) + ' in the ' + str(dest) + '.')
 
     elif command == 'write':
@@ -209,7 +215,7 @@ class Entity:
         say('Dig in what?')
       else:
         item = Item(self.location.resources[command], True)
-        if move(item, None, self):
+        if move(item, self):
           say('You dig up some ' + str(item) +
               ' and add it to your inventory.');
 
@@ -311,7 +317,7 @@ class Bograt(Entity):
   def welcome(self, whom):
     if self != whom:
       item = whom.items and whom.items[0]
-      if item and move(item, whom, ROOMS['Deep grass']):
+      if item and move(item, ROOMS['Deep grass']):
         say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
 
 Bograt('Bograt',
@@ -319,16 +325,17 @@ Bograt('Bograt',
        'Grassy knoll');
 
 
-def move(item, source, dest):
+def move(item, dest):
   if dest.capacity <= 0:
     say('Not a container!')
     return False
   if len(dest.items) >= dest.capacity:
     say('No more room!')
     return False
-  if source:
-    source.items.remove(item)
+  if item.location:
+    item.location.items.remove(item)
   dest.items.append(item)
+  item.location = dest
   return True
 
 
@@ -351,6 +358,7 @@ ALIASES = {
   'throw': 'drop',
   'i': 'inventory',
   'l': 'look',
+  'examine': 'look',
   'n': 'north',
   's': 'south',
   'e': 'east',
