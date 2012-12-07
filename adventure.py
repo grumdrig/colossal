@@ -8,23 +8,29 @@ import sys, random, getopt, textwrap
 ROOMS = {}
 
 
-def find(q, vessel):
-  return [o for o in vessel.items if o.match(q)]
+class Vessel:
+  def __init__(self, items=None, capacity=0, closed=None, locked=None):
+    self.items = []
+    self.capacity = capacity or 0
+    self.closed = closed
+    self.locked = locked
+    for item in items or []:
+      Item(item).move(self)
+    
+  def find(self, q):
+    return [o for o in self.items if o.match(q)]
   
 
-class Room:
+class Room(Vessel):
   def __init__(self, name, description, exits, resources=None, items=None):
+    Vessel.__init__(self, items, capacity=float('inf'))
     self.name = name
     self.description = description
     self.exits = exits
     self.furniture = {}
     self.resources = resources or {}
     self.inhabitants = {}
-    self.items = []
-    self.capacity = float('inf')
     ROOMS[name] = self
-    for item in items or []:
-      Item(item).move(self)
 
   def __str__(self):
     return self.name
@@ -38,15 +44,12 @@ class Room:
     return result
           
 
-class Furniture:
+class Furniture(Vessel):
   def __init__(self, name, description, location,
-               capacity=0, contents=None, closed=None, locked=None):
+               contents=None, capacity=0, closed=None, locked=None):
+    Vessel.__init__(self, contents, capacity, closed, locked)
     self.name = name
     self.description = description
-    self.capacity = capacity
-    self.items = [Item(item) for item in contents or []]
-    self.closed = closed
-    self.locked = locked
     ROOMS[location].furniture[name] = self
 
   def __str__(self):
@@ -141,13 +144,12 @@ class Item:
     return True
 
 
-class Entity:
+class Entity(Vessel):
   def __init__(self, name, description, location):
+    Vessel.__init__(self, capacity=9)
     self.name = name
     self.description = description
     self.location = None
-    self.items = []
-    self.capacity = 9
     self.go(ROOMS[location])
 
   def describe(self):
@@ -165,7 +167,7 @@ class Entity:
     elif item in self.location.inhabitants:
       return self.location.inhabitants[item]
     else:
-      items = find([item], self) or find([item], self.location)
+      items = self.find([item]) or self.location.find([item])
       return items and items[0] or None
 
   def inventory(self):
@@ -211,10 +213,10 @@ class Entity:
       self.go(words.pop(0))
 
     elif command == 'take':
-      items = find(words, self.location)
+      items = self.location.find(words)
       for furn in self.location.furniture.values():
         if not items and not furn.closed:
-          items = find(words, furn)
+          items = furn.find(words)
       if not items:
         say("I can't take what ain't there.")
       else:
@@ -223,7 +225,7 @@ class Entity:
             say(str(item), 'taken.')
 
     elif command == 'drop':
-      items = find(words, self)
+      items = self.find(words)
       if not items:
         say("You can't drop what you ain't got.")
       else:
@@ -232,7 +234,7 @@ class Entity:
             say(str(item), 'dropped.')
 
     elif command == 'call':
-      items = find(words, self)
+      items = self.find(words)
       if len(items) != 1:
         say("Call what what?")
       elif not words:
@@ -242,7 +244,7 @@ class Entity:
       
     elif command == 'put' and len(words) >= 3 and words[1] == 'in':
       dest = self.location.furniture[words[2]]
-      items = find(words, self)
+      items = self.find(words)
       if not items:
         say("You can't put what you ain't got.")
       elif dest.closed:
@@ -275,10 +277,10 @@ class Entity:
         say('The', str(what), 'is now closed.')
 
     elif command == 'write':
-      if not find(['pen'], self):
+      if not self.find(['pen']):
         say('You lack a writing implement.')
       else:
-        papers = find(['blank'], self)
+        papers = self.find(['blank'])
         if not papers:
           say('You need some blank paper to write on.')
         elif not words:
@@ -289,7 +291,7 @@ class Entity:
           paper.adjective = random.choice(INSCRIBED)
 
     elif command == 'dig':
-      if not find(['shovel'], self):
+      if not self.find(['shovel']):
         say('Dig with what?')
       elif command not in self.location.resources:
         say('Dig in what?')
