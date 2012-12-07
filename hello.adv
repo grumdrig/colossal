@@ -1,25 +1,19 @@
-inventory
 go e
-get dirt
-take dirt
-w
+take all
+dig
+dig
+dig
+dig
+dig
+dig
+dig
+dig
+dig
+dig
+dig
 i
 drop all
 l
 i
-take that
-l
-i
-put dirt in mailbox
-put dirt in mailbox
-
-examine mailbox
-
-e
-take dirt
-e
-se
-examine bograt
-examine dirt
-
-quit
+take it
+drop it

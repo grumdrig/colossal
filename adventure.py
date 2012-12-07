@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys, getopt, textwrap
+import sys, random, getopt, textwrap
 
 # http://www.pltgames.com/
 
@@ -8,16 +8,19 @@ import sys, getopt, textwrap
 ROOMS = {}
 
 
+def find(q, vessel):
+  return [o for o in vessel.items if o.match(q)]
+  
+
 class Room:
-  def __init__(self, name, description, exits,
-               resources=None, items=None):
+  def __init__(self, name, description, exits, resources=None, items=None):
     self.name = name
     self.description = description
     self.exits = exits
     self.furniture = {}
-    self.resources = resources or []
+    self.resources = resources or {}
     self.inhabitants = {}
-    self.items = items or []
+    self.items = [Item(item) for item in items or []]
     self.capacity = float('inf')
     ROOMS[name] = self
 
@@ -26,48 +29,9 @@ class Room:
     if not brief:
       result += '\n' + self.description
       for item in self.items:
-        result += '\nThere is ' + an(item) + ' here.'
+        result += '\nThere is ' + item.describe(True) + ' here.'
     return result
           
-
-Room('Outside of a small house',
-     'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white. There is a mailbox here.',
-     { 'east': 'Dirt road',
-       'west': 'Tar pit',
-       'in': 'Inside the small house',
-       },
-     )
-
-Room('Inside the small house',
-     'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated. Against one wall there is a trophy case.',
-     { 'out': 'Outside of a small house' })
-
-Room('Dirt road',
-     'You stand on a dirt road running east-west. It\'s just a dirt road. Not much more to say about it than that. Should I mention the bees and butterflies again?',
-     { 'east': 'Fork in the road',
-       'west': 'Outside of a small house',
-       },
-     resources = ['dirt']
-     )
-
-Room('Tar pit',
-     'The road leads to a noxious pit of tar. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
-     { 'east': 'Outside of a small house.' });
-
-Room('Fork in the road',
-     'The road leading in from the west forks here. The northeast fork seems to head towards a rocky, hilly area. The road to the southeast is narrower and lined with tall grass.',
-     { 'west': 'Dirt road',
-       'northeast': 'Mouth of a cave',
-       'southeast': 'Grassy knoll', },
-     )
-
-Room('Grassy knoll',
-     'A path leading from the northwest gives onto a grassy knoll. Upon the knoll is a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
-     { 'northwest': 'Fork in the road' })
-
-Room('Deep grass',
-     'The grass here is deep. It\'s like a needle in a haystack, minus the needle in here.',
-     { 'out': 'Grassy knoll' })
 
 class Furniture:
   def __init__(self, name, description, location,
@@ -75,7 +39,7 @@ class Furniture:
     self.name = name
     self.description = description
     self.capacity = capacity
-    self.items = contents or []
+    self.items = [Item(item) for item in contents or []]
     self.closed = closed
     self.locked = locked
     ROOMS[location].furniture[name] = self
@@ -84,48 +48,52 @@ class Furniture:
     return 'the ' + self.name if brief else self.description
 
 
-Furniture('mailbox',
-          'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
-          'Outside of a small house',
-          capacity=2,
-          closed=True,
-          contents=['letter'])
-
-Furniture('trophy case',
-          'This handsome trophy case features space to display up to three treasured items.',
-          'Inside the small house',
-          capacity=3,
-          closed=True,
-          locked=True);
-
-Furniture('tar pit',
-          'The tar pit emits noxious fumes and bubbles langoriously from time to time.',
-          'Tar pit',
-          capacity=float('inf'));
+ADJECTIVES = [
+  'common', 'regular', 'ordinary', 'everyday', 'humdrum', 'normal',
+  'quotidian', 'run-of-the-mill', 'standard', 'typical', 'conventional',
+  'orthodox', 'garden-variety', 'undistinguished', 'average',
+  'unexceptional', 'bland', 'conventional', 'mundane', 'ordinary',
+  'stereotypical', 'boilerplate', 'characterless', 'prosaic', 'unnoteworthy']
 
 
 MASS_NOUNS = ['dirt'];
 
-ITEMS = {
-  #'dirt': { 'mass': True },
-  }
 
 class Item:
-  def __init__(self, name, mass=False):
-    self.name = name
-    self.mass = mass
-    ITEMS[name] = self
+  def __init__(self, type, adj=False):
+    self.type = type
+    self.adjective = adj and random.choice(ADJECTIVES)
+    self.mass = type in MASS_NOUNS
 
-  def describe(self):
-    return 'Just ' + self.an('ordinary') + '.'
+  def __str__(self):
+    return (self.adjective + ' ' if self.adjective else '') + self.type
 
-  def an(self, adj=None):
-    article = 'some' if self.mass else 'an' if item[0] in 'aeiou' else 'a'
-    return ' '.join([article, adj, self.name] if adj else [articles, self.name])
+  def describe(self, brief=False):
+    result = [] if brief else ['Just'];
+    result.append(self.an())
+    if self.adjective: result.append(self.adjective)
+    return ' '.join(result + [self.type])
 
+  def an(self):
+    return 'some' if self.mass else 'an' if self.type[0] in 'aeiou' else 'a'
 
-Item('dirt', mass=True)
-Item('paper')
+  def match(self, q):
+    if not q:
+      return None
+    if q[0] == 'all':
+      return self
+    elif q[0] == 'it':
+      q.pop(0)
+      return self
+    result = None
+    if q and q[0] == self.adjective:
+      result = self
+      q.pop(0)
+    if q and q[0] == self.type:
+      result = self
+      q.pop(0)
+    return result
+    
 
 
 class Entity:
@@ -140,7 +108,9 @@ class Entity:
   def describe(self):
     return self.description
 
-  def resolve(self, item):
+  def resolve(self, q):
+    if not q: return None
+    item = q[0]
     if item == 'self':
       return self
     elif item == 'here':
@@ -149,15 +119,14 @@ class Entity:
       return self.location.furniture[item]
     elif item in self.location.inhabitants:
       return self.location.inhabitants[item]
-    elif (item in ITEMS and
-          item in (self.items + self.location.items + self.location.resources)):
-      return ITEMS[item]
+    else:
+      return find([item], self) or find([item], self.location)
 
   def inventory(self):
     if self.items:
       say('You are currently holding:')
       for item in self.items:
-        say('  ' + Cap(an(item)) + '.')
+        say('  ' + Cap(item.describe(True)) + '.')
     else:
       say('You are empty-handed.')
 
@@ -172,20 +141,10 @@ class Entity:
     for npc in self.location.inhabitants.values():
       npc.welcome(self)
 
-  def drop(self, item):
-    if move(item, self, self.location):
-      say(item, 'dropped.')
-      
-  def take(self, item):
-    if move(item, self.location, self):
-      say(item, 'taken.')
-
   def welcome(self, whom):
     pass
 
   def parse(self, line):
-    ALIASES['this'] = (self.items[-1:]+['this'])[0]
-    ALIASES['that'] = (self.location.items[-1:]+['that'])[0]
     words = [ALIASES.get(word,word) for word in line.strip().lower().split()]
     if not words:
       return True
@@ -202,45 +161,56 @@ class Entity:
       say(self.location.describe())
 
     elif command == 'examine':
-      thing = self.resolve(words[0])
+      thing = self.resolve(words)
       say(thing.describe() if thing else 'What ' + words[0] + '?')
 
     elif command == 'go':
       self.go(words.pop(0))
 
     elif command == 'take':
-      available = self.location.items + self.location.resources
-      if not available:
-        say('Nothing here!')
+      items = find(words, self.location)
+      if not items:
+        say("I can't take what ain't there.")
       else:
-        if not words:
-          say('Take what?')
-        elif words[0] == 'all':
-          words = available[:]
-        for item in words:
-          self.take(item)
+        for item in items:
+          if move(item, self.location, self):
+            say(str(item), 'taken.')
 
     elif command == 'drop':
-      if not self.items:
-        say('You don\'t have anything to drop!')
+      items = find(words, self)
+      if not items:
+        say("You can't drop what you ain't got.")
       else:
-        if not words:
-          say('Drop what?')
-        elif words[0] == 'all':
-          words = self.items[:]
-        for item in words:
-          self.drop(item)
+        for item in items:
+          if move(item, self, self.location):
+            say(str(item), 'dropped.')
 
     elif command == 'put' and len(words) >= 3 and words[1] == 'in':
       dest = self.location.furniture[words[2]]
-      if move(words[0], self, dest):
-        say('You put the', words[0], 'in the', words[2] + '.')
+      items = find(words, self)
+      if not items:
+        say("You can't put what you ain't got.")
+      else:
+        for item in items:
+          if move(item, self, dest):
+            say('You put the', item.describe(True), 'in the', words[2] + '.')
 
     elif command == 'write':
-      if 'pen' not in self.items:
+      if not find(['pen'], self):
         say('You lack a writing implement.')
       else:
         unimplemented()
+
+    elif command == 'dig':
+      if not find(['shovel'], self):
+        say('Dig with what?')
+      elif command not in self.location.resources:
+        say('Dig in what?')
+      else:
+        item = Item(self.location.resources[command], True)
+        if move(item, None, self):
+          say('You dig up some ' + str(item) +
+              ' and add it to your inventory.');
 
     elif command in self.location.exits.keys():
       # just a direction. "go" is implied
@@ -264,19 +234,6 @@ class Entity:
 
     
 
-class Bograt(Entity):
-  def welcome(self, whom):
-    if self != whom:
-      item = whom.items and whom.items[0]
-      if item and move(item, whom, ROOMS['Deep grass']):
-        say('Goddamn that Bograt. He stole your', item + '. Then he tossed it somewhere into the deep grass.')
-
-
-Bograt('Bograt',
-       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
-       'Grassy knoll');
-
-
 class Player(Entity):
   def __init__(self, location):
     self.visited = set()
@@ -288,7 +245,77 @@ class Player(Entity):
   def welcome(self, whom):
     if self == whom:
       self.visited.add(self.location.name)
-  
+
+
+
+Room('Outside of a small house',
+     'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white. There is a mailbox here.',
+     { 'east': 'Dirt road',
+       'west': 'Tar pit',
+       'in': 'Inside the small house',
+       },
+     )
+
+Room('Inside the small house',
+     'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated. Against one wall there is a trophy case.',
+     { 'out': 'Outside of a small house' })
+
+# Use this is some other description:
+# It\'s just a dirt road. Not much more to say about it than that. Should I mention the bees and butterflies again?
+Room('Dirt road',
+     "You stand on a dirt road running east-west. The road is dirt. It's quite dirty. Beside the road is also dirt; there's dirt everywhere, in fact. Piles and piles of dirt, all around you!",
+     { 'east': 'Fork in the road',
+       'west': 'Outside of a small house' },
+     resources={ 'dig': 'dirt' },
+     items=['shovel'])
+
+Room('Tar pit',
+     'The road leads to a noxious pit of tar. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
+     { 'east': 'Outside of a small house.' });
+
+Room('Fork in the road',
+     'The road leading in from the west forks here. The northeast fork seems to head towards a rocky, hilly area. The road to the southeast is narrower and lined with tall grass.',
+     { 'west': 'Dirt road',
+       'northeast': 'Mouth of a cave',
+       'southeast': 'Grassy knoll', })
+
+Room('Grassy knoll',
+     'A path leading from the northwest gives onto a grassy knoll. Upon the knoll is a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
+     { 'northwest': 'Fork in the road' })
+
+Room('Deep grass',
+     'The grass here is deep. It\'s like a needle in a haystack, minus the needle in here.',
+     { 'out': 'Grassy knoll' })
+
+Furniture('mailbox',
+          'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
+          'Outside of a small house',
+          capacity=2,
+          closed=True,
+          contents=['letter'])
+
+Furniture('trophy case',
+          'This handsome trophy case features space to display up to three treasured items.',
+          'Inside the small house',
+          capacity=3,
+          closed=True,
+          locked=True);
+
+Furniture('tar pit',
+          'The tar pit emits noxious fumes and bubbles langoriously from time to time.',
+          'Tar pit',
+          capacity=float('inf'));
+
+class Bograt(Entity):
+  def welcome(self, whom):
+    if self != whom:
+      item = whom.items and whom.items[0]
+      if item and move(item, whom, ROOMS['Deep grass']):
+        say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
+
+Bograt('Bograt',
+       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
+       'Grassy knoll');
 
 
 def move(item, source, dest):
@@ -298,28 +325,11 @@ def move(item, source, dest):
   if len(dest.items) >= dest.capacity:
     say('No more room!')
     return False
-  for i in range(len(source.items)):
-    if source.items[i] == item:
-      source.items[i:1] = []
-      dest.items.append(item)
-      return True
-  if hasattr(source, 'resources') and item in source.resources:
-    if item in MASS_NOUNS and item in dest.items:
-      say('You already have', an(item) + '.')
-      return False
-    dest.items.append(item)
-    return True
-  say('What', item, 'now?')
-  return False
+  if source:
+    source.items.remove(item)
+  dest.items.append(item)
+  return True
 
-
-def an(item):
-  if item in MASS_NOUNS:
-    return 'some ' + item
-  elif item[0] in 'aeiou':
-    return 'an ' + item
-  else:
-    return 'a ' + item
 
 def Cap(s):
   return s[:1].upper() + s[1:]
