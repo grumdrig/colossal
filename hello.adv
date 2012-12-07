@@ -18,7 +18,11 @@ i
 take it
 w
 i
+open mailbox
 put it in mailbox
+l mailbox
+close mailbox
+close mailbox
 l mailbox
 l poop
 take shovel

@@ -52,7 +52,7 @@ class Furniture:
 
   def describe(self, brief=False):
     result = 'the ' + self.name if brief else self.description
-    if not brief and self.items:
+    if not brief and not self.closed and self.items:
       result += '\nThe ' + self.name + ' contains:'
       for item in self.items:
         result += '\n  ' + Cap(item.describe(True)) + '.'
@@ -188,7 +188,7 @@ class Entity:
     elif command == 'take':
       items = find(words, self.location)
       for furn in self.location.furniture.values():
-        if not items:
+        if not items and not furn.closed:
           items = find(words, furn)
       if not items:
         say("I can't take what ain't there.")
@@ -211,10 +211,34 @@ class Entity:
       items = find(words, self)
       if not items:
         say("You can't put what you ain't got.")
+      elif dest.closed:
+        say("The " + str(dest) + " is closed.")
       else:
         for item in items:
           if item.move(dest):
             say('You put the ' + str(item) + ' in the ' + str(dest) + '.')
+
+    elif command == 'open':
+      what = self.resolve(words)
+      if not what:
+        say('Open what?')
+      elif not what.closed:
+        say('The', str(what), 'is not closed.')
+      elif what.locked:
+        say('The', str(what), 'is locked.')
+      else:
+        what.closed = False
+        say('The', str(what), 'is now open.')
+
+    elif command == 'close':
+      what = self.resolve(words)
+      if not what:
+        say('Close what?')
+      elif what.closed != False:
+        say('The', str(what), 'is not open.')
+      else:
+        what.closed = True
+        say('The', str(what), 'is now closed.')
 
     elif command == 'write':
       if not find(['pen'], self):
