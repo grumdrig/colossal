@@ -23,6 +23,8 @@ class Vessel:
     return items[0] if len(items) == 1 else None
 
   def onTake(self, item): pass
+  def onArrive(self): pass
+
   
 
 class Room(Vessel):
@@ -32,9 +34,7 @@ class Room(Vessel):
     self.description = description
     self.exits = exits
     self.resources = resources or {}
-    self.inhabitants = {}
     ROOMS[name] = self
-    ROOMS[self] = self
 
   def __str__(self):
     return self.name
@@ -44,7 +44,8 @@ class Room(Vessel):
     if not brief:
       result += '\n' + self.description
       for item in self.items:
-        result += '\nThere is ' + item.describe(True) + ' here.'
+        if item.type != 'You':
+          result += '\nThere is ' + item.describe(True) + ' here.'
     return result
           
 
@@ -73,6 +74,7 @@ class Item(Vessel):
     else:
       self.type = type
       self.adjective = None
+    self.description = description
     self.name = None
     self.location = None
     self.furniture = furniture
@@ -122,7 +124,7 @@ class Item(Vessel):
     return result
     
   def move(self, dest, *message):
-    if self.location and self.furniture:
+    if self.furniture and (self.location and dest):
       say('The', self, "can't be moved.")
       return False
     if isinstance(dest, str):
@@ -141,19 +143,15 @@ class Item(Vessel):
     if dest:
       dest.items.append(self)
       dest.onTake(self)
+    if self.location:
+      self.onArrive()
     return True
 
 
-class Entity(Vessel):
-  def __init__(self, name, description, location):
-    Vessel.__init__(self, capacity=9)
-    self.name = name
-    self.description = description
-    self.location = None
+class Entity(Item):
+  def __init__(self, type, location, description):
+    Item.__init__(self, type, location, description, capacity=9, furniture=True)
     self.go(ROOMS[location])
-
-  def describe(self):
-    return self.description
 
   def resolve(self, q):
     if not q: return None
@@ -162,8 +160,6 @@ class Entity(Vessel):
       return self
     elif item == 'here':
       return self.location
-    elif item in self.location.inhabitants:
-      return self.location.inhabitants[item]
     else:
       items = self.find([item]) or self.location.find([item])
       return items and items[0] or None
@@ -177,18 +173,10 @@ class Entity(Vessel):
       say('You are empty-handed.')
 
   def go(self, location):
-    if self.location:
-      del self.location.inhabitants[self.name.lower()]
-      if isinstance(location, str):
-        location = ROOMS[self.location.exits[location]]
-      say(location.describe(location.name in self.visited))
-    self.location = location
-    self.location.inhabitants[self.name.lower()] = self
-    for npc in self.location.inhabitants.values():
-      npc.onArrive(self)
-
-  def onArrive(self, whom):
-    pass
+    if isinstance(location, str):
+      location = ROOMS[self.location.exits[location]]
+    self.move(None)
+    self.move(location)
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in
@@ -362,11 +350,11 @@ class Player(Entity):
     self.visited = set()
     Entity.__init__(self,
                     "You",
-                    "You are you. That's just who you are.",
-                    location)
-  def onArrive(self, whom):
-    if self == whom:
-      self.visited.add(self.location.name)
+                    location,
+                    "You are you. That's just who you are.")
+  def onArrive(self):
+    say(self.location.describe(self.location.name in self.visited))
+    self.visited.add(self.location.name)
 
 
 
@@ -433,14 +421,14 @@ Room('Grassy knoll',
      'A path leading from the northwest gives onto a grassy knoll. Upon the knoll is a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
      { 'northwest': 'Fork in the road' })
 class Bograt(Entity):
-  def onArrive(self, whom):
+  def onArriveXXXXXTODO111(self, whom):
     if self != whom:
       item = whom.items and whom.items[0]
       if item and item.move(ROOMS['Deep grass']):
         say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
-Bograt('Bograt',
-       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
-       'Grassy knoll');
+Bograt('gnoll',
+       'Grassy knoll',
+       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.').name = 'bograt'
 
 
 Room('Deep grass',
