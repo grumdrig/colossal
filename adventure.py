@@ -65,16 +65,17 @@ MASS_NOUNS = ['dirt'];
 
 class Item(Vessel):
   def __init__(self, type, location, 
-               description=None, adj=False,
+               description=None, adj=False, furniture=False,
                capacity=0, closed=None, locked=None):
     Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
     if len(type.split(' ')) > 1:
       self.adjective, self.type = type.split(' ')
     else:
       self.type = type
-      self.adjective = adj and random.choice(ADJECTIVES)
+      self.adjective = None
     self.name = None
     self.location = None
+    self.furniture = furniture
     self.writing = []
     mass = type in MASS_NOUNS
     self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
@@ -121,7 +122,7 @@ class Item(Vessel):
     return result
     
   def move(self, dest, *message):
-    if self.location and isinstance(self, Furniture):
+    if self.location and self.furniture:
       say('The', self, "can't be moved.")
       return False
     if isinstance(dest, str):
@@ -141,13 +142,6 @@ class Item(Vessel):
       dest.items.append(self)
       dest.onTake(self)
     return True
-
-
-class Furniture(Item):
-  def __init__(self, type, location, description,
-               capacity=0, closed=None, locked=None):
-    Item.__init__(self, type, location, description=description,
-                  capacity=capacity, closed=closed, locked=locked)
 
 
 class Entity(Vessel):
@@ -377,24 +371,25 @@ class Player(Entity):
 
 
 osh = Room('Outside of a small house',
-           'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white. There is a mailbox here.',
+           'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white.',
            { 'east': 'Dirt road',
              'west': 'Tar pit',
              'in': 'Inside the small house' })
 Item('blank parchment', osh)
 Item('pen', osh)
-mb = Furniture('mailbox',
-               osh,
-               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
-               capacity=2,
-               closed=True)
+mb = Item('mailbox',
+          osh,
+          'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
+          furniture=True,
+          capacity=2,
+          closed=True)
 Item('letter', mb)
 
 
 Room('Inside the small house',
-     'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated. Against one wall there is a trophy case.',
+     'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated.',
      { 'out': 'Outside of a small house' })
-class TrophyCase(Furniture):
+class TrophyCase(Item):
   def onClose(self):
     if self.items:
       say('AN INFINITE EXHILARATION THRUMS IN YOUR HEART')
@@ -404,13 +399,12 @@ class TrophyCase(Furniture):
         item.move(None)
 TrophyCase('trophy case',
            'Inside the small house',
-           'This handsome trophy case features space to display a few treasured items.',
+           'Against one overdecorated wall there is a trophy case. This handsome case offers display space for a few treasured items.',
+           furniture=True,
            capacity=3,
            closed=True,
            locked=True);
 
-# Use this is some other description:
-# It\'s just a dirt road. Not much more to say about it than that. Should I mention the bees and butterflies again?
 Room('Dirt road',
      "You stand on a dirt road running east-west. The road is dirt. It's quite dirty. Beside the road is also dirt; there's dirt everywhere, in fact. Piles and piles of dirt, all around you!",
      { 'east': 'Fork in the road',
@@ -429,7 +423,7 @@ TarPit('Tar pit',
 
 
 Room('Fork in the road',
-     'The road leading in from the west forks here. The northeast fork seems to head towards a rocky, hilly area. The road to the southeast is narrower and lined with tall grass.',
+     'The road leading in from the west forks here. The northeast fork seems to head towards a rocky, hilly area. The road to the southeast is narrower and lined with tall grass. Not much more to say about it than that. Should I mention the bees and butterflies again?',
      { 'west': 'Dirt road',
        'northeast': 'Mouth of a cave',
        'southeast': 'Grassy knoll', })
@@ -438,24 +432,22 @@ Room('Fork in the road',
 Room('Grassy knoll',
      'A path leading from the northwest gives onto a grassy knoll. Upon the knoll is a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
      { 'northwest': 'Fork in the road' })
-
-
-Room('Deep grass',
-     'The grass here is deep. It\'s like a needle in a haystack, minus the needle in here.',
-     { 'out': 'Grassy knoll' })
-
-
-
 class Bograt(Entity):
   def onArrive(self, whom):
     if self != whom:
       item = whom.items and whom.items[0]
       if item and item.move(ROOMS['Deep grass']):
         say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
-
 Bograt('Bograt',
        'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.',
        'Grassy knoll');
+
+
+Room('Deep grass',
+     "The grass here is deep. It's like a needle in a haystack, minus the needle in here.",
+     { 'out': 'Grassy knoll' })
+
+
 
 
 
