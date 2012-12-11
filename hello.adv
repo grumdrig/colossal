@@ -1,7 +1,8 @@
 take all
+i
 write "Hello World!"
 in
-unlock "trophy case"
-open "trophy case"
-put parchment in "trophy case"
-close "trophy case"
+unlock trophy case
+open trophy case
+put parchment in trophy case
+close trophy case

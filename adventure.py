@@ -18,6 +18,10 @@ class Vessel:
   def find(self, q):
     return [o for o in self.items if o.match(q)]
 
+  def findOne(self, q):
+    items = self.find(q)
+    return items[0] if len(items) == 1 else None
+
   def onTake(self, item): pass
   
 
@@ -27,7 +31,6 @@ class Room(Vessel):
     self.name = name
     self.description = description
     self.exits = exits
-    self.furniture = {}
     self.resources = resources or {}
     self.inhabitants = {}
     ROOMS[name] = self
@@ -45,27 +48,6 @@ class Room(Vessel):
     return result
           
 
-class Furniture(Vessel):
-  def __init__(self, name, description, location,
-               capacity=0, closed=None, locked=None):
-    Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
-    self.name = name
-    self.description = description
-    if isinstance(location, str): location = ROOMS[location]
-    location.furniture[name] = self
-
-  def __str__(self):
-    return self.name
-
-  def describe(self, brief=False):
-    result = 'the ' + self.name if brief else self.description
-    if not brief and not self.closed and self.items:
-      result += '\nThe ' + self.name + ' contains:'
-      for item in self.items:
-        result += '\n  ' + Cap(item.describe(True)) + '.'
-    return result
-
-
 ADJECTIVES = [
   'common', 'regular', 'ordinary', 'everyday', 'humdrum', 'normal',
   'quotidian', 'run-of-the-mill', 'standard', 'typical', 'conventional',
@@ -81,8 +63,11 @@ INSCRIBED = [
 MASS_NOUNS = ['dirt'];
 
 
-class Item:
-  def __init__(self, type, location=None, adj=False):
+class Item(Vessel):
+  def __init__(self, type, location, 
+               description=None, adj=False,
+               capacity=0, closed=None, locked=None):
+    Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
     if len(type.split(' ')) > 1:
       self.adjective, self.type = type.split(' ')
     else:
@@ -104,13 +89,16 @@ class Item:
   def describe(self, brief=False):
     if brief:
       return self.an + ' ' + str(self)
-    elif self.writing:
-      result = self.an + ' ' + str(self) + '. Written on it, it says:'
+    result = self.description or 'Just ' + self.an + ' ' + str(self) + '.'
+    if self.writing:
+      result += 'Written on it, it says:'
       for line in self.writing:
         result += '\n  ' + line
-      return result
-    else:
-      return 'Just ' + self.an + ' ' + str(self) + '.'
+    if not self.closed and self.items:
+      result += '\nThe ' + self.type + ' contains:'
+      for item in self.items:
+        result += '\n  ' + Cap(item.describe(True)) + '.'
+    return result
 
   def match(self, q):
     if not q:
@@ -133,6 +121,9 @@ class Item:
     return result
     
   def move(self, dest, *message):
+    if self.location and isinstance(self, Furniture):
+      say('The', self, "can't be moved.")
+      return False
     if isinstance(dest, str):
       dest = ROOMS[dest]
     if dest and (dest.capacity <= 0):
@@ -150,6 +141,13 @@ class Item:
       dest.items.append(self)
       dest.onTake(self)
     return True
+
+
+class Furniture(Item):
+  def __init__(self, type, location, description,
+               capacity=0, closed=None, locked=None):
+    Item.__init__(self, type, location, description=description,
+                  capacity=capacity, closed=closed, locked=locked)
 
 
 class Entity(Vessel):
@@ -170,8 +168,6 @@ class Entity(Vessel):
       return self
     elif item == 'here':
       return self.location
-    elif item in self.location.furniture:
-      return self.location.furniture[item]
     elif item in self.location.inhabitants:
       return self.location.inhabitants[item]
     else:
@@ -223,7 +219,7 @@ class Entity(Vessel):
 
     elif command == 'take':
       items = self.location.find(words)
-      for furn in self.location.furniture.values():
+      for furn in self.location.items:
         if not items and not furn.closed:
           items = furn.find(words)
       if not items:
@@ -251,16 +247,21 @@ class Entity(Vessel):
         items[0].name = words[0]
       
     elif command == 'put' and len(words) >= 3 and words[1] == 'in':
-      dest = self.location.furniture[words[2]]
       items = self.find(words)
       if not items:
         say("You can't put what you ain't got.")
-      elif dest.closed:
-        say("The " + str(dest) + " is closed.")
+      elif words.pop(0) != 'in':
+        say("I did not understand that.")
       else:
-        for item in items:
-          if item.move(dest):
-            say('You put the ' + str(item) + ' in the ' + str(dest) + '.')
+        dest = self.location.findOne(words)
+        if not dest:
+          say("Where?")
+        elif dest.closed:
+          say("The " + str(dest) + " is closed.")
+        else:
+          for item in items:
+            if item.move(dest):
+              say('You put the ' + str(item) + ' in the ' + str(dest) + '.')
 
     elif command == 'open':
       what = self.resolve(words)
@@ -380,11 +381,11 @@ osh = Room('Outside of a small house',
            { 'east': 'Dirt road',
              'west': 'Tar pit',
              'in': 'Inside the small house' })
-Item('blank parchment').move(osh)
-Item('pen').move(osh)
+Item('blank parchment', osh)
+Item('pen', osh)
 mb = Furniture('mailbox',
-               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
                osh,
+               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
                capacity=2,
                closed=True)
 Item('letter', mb)
@@ -402,8 +403,8 @@ class TrophyCase(Furniture):
         say('The', item, 'vanishes!')
         item.move(None)
 TrophyCase('trophy case',
-           'This handsome trophy case features space to display a few treasured items.',
            'Inside the small house',
+           'This handsome trophy case features space to display a few treasured items.',
            capacity=3,
            closed=True,
            locked=True);
