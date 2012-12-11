@@ -1,9 +1,16 @@
 take all
 write "write east"
+west
+drop parchment
+l
+examine here
+quit 
+
 execute parchment
 execute parchment
 l parchment
 quit
+
 write four score and seven; years ago
 write our forefathers
 l paper

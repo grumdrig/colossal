@@ -17,6 +17,8 @@ class Vessel:
     
   def find(self, q):
     return [o for o in self.items if o.match(q)]
+
+  def onTake(self, item): pass
   
 
 class Room(Vessel):
@@ -129,7 +131,7 @@ class Item:
       q.pop(0)
     return result
     
-  def move(self, dest):
+  def move(self, dest, *message):
     if isinstance(dest, str):
       dest = ROOMS[dest]
     if dest and (dest.capacity <= 0):
@@ -140,9 +142,12 @@ class Item:
       return False
     if self.location:
       self.location.items.remove(self)
+    self.location = dest
+    if message:
+      say(*message)
     if dest:
       dest.items.append(self)
-    self.location = dest
+      dest.onTake(self)
     return True
 
 
@@ -189,9 +194,9 @@ class Entity(Vessel):
     self.location = location
     self.location.inhabitants[self.name.lower()] = self
     for npc in self.location.inhabitants.values():
-      npc.welcome(self)
+      npc.onArrive(self)
 
-  def welcome(self, whom):
+  def onArrive(self, whom):
     pass
 
   def parse(self, line, depth=0):
@@ -233,8 +238,7 @@ class Entity(Vessel):
         say("You can't drop what you ain't got.")
       else:
         for item in items:
-          if item.move(self.location):
-            say(str(item), 'dropped.')
+          item.move(self.location, str(item), 'dropped.')
 
     elif command == 'call':
       items = self.find(words)
@@ -343,8 +347,7 @@ class Player(Entity):
                     "You",
                     "You are you. That's just who you are.",
                     location)
-
-  def welcome(self, whom):
+  def onArrive(self, whom):
     if self == whom:
       self.visited.add(self.location.name)
 
@@ -387,7 +390,11 @@ Room('Dirt road',
 Item('shovel', 'Dirt road')
 
 
-Room('Tar pit',
+class TarPit(Room):
+  def onTake(self, item):
+    item.move(None)
+    say('The', item, 'sinks into the tar!')
+TarPit('Tar pit',
      'The road leads to a noxious pit of tar. It emits noxious fumes and bubbles langoriously from time to time. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
      { 'east': 'Outside of a small house.' });
 
@@ -411,7 +418,7 @@ Room('Deep grass',
 
 
 class Bograt(Entity):
-  def welcome(self, whom):
+  def onArrive(self, whom):
     if self != whom:
       item = whom.items and whom.items[0]
       if item and item.move(ROOMS['Deep grass']):
@@ -431,7 +438,7 @@ VERBOSE = False
 
 def say(*args):
   if VERBOSE:
-    for s in Cap(' '.join(args)).split('\n'):
+    for s in Cap(' '.join([str(a) for a in args])).split('\n'):
       print textwrap.fill(s)
 
 
