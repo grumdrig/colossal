@@ -281,15 +281,15 @@ class Entity(Vessel):
       if not self.find(['pen']):
         say('You lack a writing implement.')
       else:
-        papers = self.find(['blank'])
-        if not papers:
-          say('You need some blank paper to write on.')
+        parchments = self.find(['blank'])
+        if not parchments:
+          say('You need some blank parchment to write on.')
         elif not words:
           say('What do you want to write?')
         else:
-          paper = papers[0]
-          paper.writing = [line.strip() for line in ' '.join(words).split(';')]
-          paper.adjective = random.choice(INSCRIBED)
+          parchment = parchments[0]
+          parchment.writing = [line.strip() for line in ' '.join(words).split(';')]
+          parchment.adjective = random.choice(INSCRIBED)
 
     elif command == 'dig':
       if not self.find(['shovel']):
@@ -345,7 +345,7 @@ ooash = Room('Outside of a small house',
        'in': 'Inside the small house',
        }
      )
-Item('blank paper').move(ooash)
+Item('blank parchment').move(ooash)
 Item('pen').move(ooash)
 
 Room('Inside the small house',
