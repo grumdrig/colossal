@@ -94,7 +94,7 @@ class Item(Vessel):
       return self.an + ' ' + str(self)
     result = self.description or 'Just ' + self.an + ' ' + str(self) + '.'
     if self.writing:
-      result += 'Written on it, it says:'
+      result += ' Written on it are these words:'
       for line in self.writing:
         result += '\n  ' + line
     if not self.closed and self.items:
@@ -102,6 +102,9 @@ class Item(Vessel):
       for item in self.items:
         result += '\n  ' + Cap(item.describe(True)) + '.'
     return result
+
+  def write(self, content):
+    self.writing += [line.strip() for line in content.split(';')]
 
   def match(self, q):
     def q0(b):
@@ -299,8 +302,7 @@ class Entity(Item):
           say('What do you want to write?')
         else:
           parchment = parchments[0]
-          parchment.writing += [line.strip() for line in
-                                ' '.join(words).split(';')]
+          parchment.write(' '.join(words))
           parchment.adjective = random.choice(INSCRIBED)
 
     elif command == 'execute':
@@ -357,14 +359,14 @@ class Player(Entity):
     self.visited.add(self.location.name)
 
 
+####################################################
 
 osh = Room('Outside of a small house',
            'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white.',
            { 'east': 'Dirt road',
-             'west': 'Tar pit',
+             'west': 'Crossroads',
              'in': 'Inside the small house' })
 Item('blank parchment', osh)
-Item('pen', osh)
 mb = Item('mailbox',
           osh,
           'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
@@ -373,6 +375,7 @@ mb = Item('mailbox',
           closed=True)
 Item('letter', mb)
 
+####################################################
 
 Room('Inside the small house',
      'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated.',
@@ -393,6 +396,8 @@ TrophyCase('trophy case',
            closed=True,
            locked=True);
 
+####################################################
+
 Room('Dirt road',
      "You stand on a dirt road running east-west. The road is dirt. It's quite dirty. Beside the road is also dirt; there's dirt everywhere, in fact. Piles and piles of dirt, all around you!",
      { 'east': 'Fork in the road',
@@ -400,15 +405,37 @@ Room('Dirt road',
      resources={ 'dig': 'dirt' })
 Item('shovel', 'Dirt road')
 
+####################################################
 
 class TarPit(Room):
   def onTake(self, item):
     item.move(None)
     say('The', item, 'sinks into the tar!')
 TarPit('Tar pit',
-     'The road leads to a noxious pit of tar. It emits noxious fumes and bubbles langoriously from time to time. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
-     { 'east': 'Outside of a small house.' });
+       'The road leads to a noxious pit of tar. It emits noxious fumes and bubbles langoriously from time to time. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
+       { 'east': 'Outside of a small house' });
 
+####################################################
+
+Room('Crossroads',
+     'You stand at a crossroads. Also, there are roads leading in all the cardinal directions.',
+     { 'north': 'Dunno...',
+       'south': 'Not sure',
+       'east': 'Outside of a small house',
+       'west': 'Tar pit' });
+Item('devil', 'Crossroads',
+     "This is the Lord Beelzebub. Satan. Lucifer. You've heard the stories. He's just hanging around here, not really doing too much. Just thinking about stuff.").name = 'Satan'
+
+####################################################
+
+Room('Dunno...',
+     "I'm not sure what we're looking at here. I just don't know how to describe it. It's just...\nThe road continues north-south. Other than that it's just really indescribable. (Sorry.)",
+     { 'north': 'TODO',
+       'south': 'Crossroads' })
+Item('something', 'Dunno...',
+     'What the hell is this thing?')
+
+####################################################
 
 Room('Fork in the road',
      'The road leading in from the west forks here. The northeast fork seems to head towards a rocky, hilly area. The road to the southeast is narrower and lined with tall grass. Not much more to say about it than that. Should I mention the bees and butterflies again?',
@@ -416,6 +443,7 @@ Room('Fork in the road',
        'northeast': 'Mouth of a cave',
        'southeast': 'Grassy knoll', })
 
+####################################################
 
 class GrassyKnoll(Room):
   def onTake(self, whom):
@@ -430,11 +458,50 @@ Item('gnoll',
      'Grassy knoll',
      'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.').name = 'Bograt'
 
+####################################################
 
 Room('Deep grass',
      "The grass here is deep. It's like a needle in a haystack, minus the needle in here.",
      { 'out': 'Grassy knoll' })
 
+####################################################
+
+Room('Mouth of a cave',
+     "The jaws of a cave yawn before you. To continue the metaphor, the cave's acrid breath recalls overcooked garlic bread. Sharp teeth (and here I'm hinting at stactites and stalagmites) gnash (poetically speaking) at the lips of the cave. I think that's descriptive enough.",
+     { 'southwest': 'Fork in the road',
+       'north': 'Cave foyer',
+       'in': 'Cave foyer' })
+
+####################################################
+
+Room('Cave foyer',
+     "Immediately inside the entrance to the cave, it opens up to a vaulted entryway. The skeletal remains and equipment of what must be the world's absolute worst spelunker slump against one wall. Deeper into the cave, a low passage winds north.",
+     { 'out': 'Mouth of a cave',
+       'south': 'Mouth of a cave',
+       'north': 'Narrow passage' })
+pack = Item('backpack', 'Cave foyer', capacity=6)
+Item('pen', pack)
+Item('journal', pack).write('August 13;;Down to my last stick of gum. I should have brought more food and less gum.;;The exit from this cave must be somewhere around here, but I lack the strength to keep looking.;;...')
+
+####################################################
+
+Room('Narrow passage',
+     "The passage soon becomes so low you have to belly crawl to get anywhere. It's also dark, very dark. The walls press your sides, unyielding cold stone. Despite the chill, sweat beads your brow. There is scuffling sound behind you. A footstep? No, no. You feel like you're suffocating. Is that a dim glow up ahead? Please let it be so...",
+     { 'south': 'Cave foyer',
+       'north': 'Chamber' });
+
+####################################################
+
+Room('Chamber',
+     "Small fissures in the ceiling allow a bit of daylight to filter into this fairly roomy chamber. Passages extend in all four directions.",
+     { 'south': 'Narrow passage',
+       'north': 'North chamber',
+       'east': 'East chamber',
+       'west': 'West chamber' })
+Entity('robot', 'Chamber',
+       "Picure Bender from Futurama, without the drinking problem. That's pretty much this robot. Not that he's without his problems though; his problem is overenthusiasm.").name = 'Floyd'
+
+####################################################
 
 
 
@@ -462,6 +529,7 @@ ALIASES = {
   'i': 'inventory',
   'l': 'look',
   'examine': 'look',
+  'read': 'look',
   'n': 'north',
   's': 'south',
   'e': 'east',

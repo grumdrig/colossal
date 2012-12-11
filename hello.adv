@@ -1,4 +1,17 @@
 take all
+east
+east
+ne
+in
+l backpack
+take pen
+take journal
+read journal
+n
+n
+l robot
+
+quit
 i
 write "Hello World!"
 in
