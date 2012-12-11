@@ -283,6 +283,27 @@ class Entity(Vessel):
       else:
         what.closed = True
         say('The', str(what), 'is now closed.')
+        what.onClose()
+
+    elif command == 'unlock':
+      what = self.resolve(words)
+      if not what:
+        say('Unlock what?')
+      elif not what.locked:
+        say('The', what, 'is not locked.')
+      else:
+        what.locked = False
+        say('You unlock the', str(what) + '.')
+
+    elif command == 'lock':
+      what = self.resolve(words)
+      if not what:
+        say('Unlock what?')
+      elif what.locked != False:
+        say('The', what, 'is not unlocked.')
+      else:
+        what.locked = True
+        say('You lock the', str(what) + '.')
 
     elif command == 'write':
       if not self.find(['pen']):
@@ -372,12 +393,20 @@ Item('letter', mb)
 Room('Inside the small house',
      'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated. Against one wall there is a trophy case.',
      { 'out': 'Outside of a small house' })
-Furniture('trophy case',
-          'This handsome trophy case features space to display up to three treasured items.',
-          'Inside the small house',
-          capacity=3,
-          closed=True,
-          locked=True);
+class TrophyCase(Furniture):
+  def onClose(self):
+    if self.items:
+      say('AN INFINITE EXHILARATION THRUMS IN YOUR HEART')
+      for item in self.items:
+        output(item.writing)
+        say('The', item, 'vanishes!')
+        item.move(None)
+TrophyCase('trophy case',
+           'This handsome trophy case features space to display a few treasured items.',
+           'Inside the small house',
+           capacity=3,
+           closed=True,
+           locked=True);
 
 # Use this is some other description:
 # It\'s just a dirt road. Not much more to say about it than that. Should I mention the bees and butterflies again?
@@ -438,7 +467,10 @@ VERBOSE = False
 def say(*args):
   if VERBOSE:
     for s in Cap(' '.join([str(a) for a in args])).split('\n'):
-      print textwrap.fill(s)
+      sys.stderr.write(textwrap.fill(s) + '\n')
+
+def output(lines):
+  print '\n'.join(lines)
 
 
 ALIASES = {

@@ -1,23 +1,7 @@
 take all
-write "write east"
-west
-drop parchment
-l
-examine here
-quit 
-
-execute parchment
-execute parchment
-l parchment
-quit
-
-write four score and seven; years ago
-write our forefathers
-l paper
-l mailbox
-call pen reggie
-l pen
-i
-drop reggie
-l
-take all
+write "Hello World!"
+in
+unlock "trophy case"
+open "trophy case"
+put parchment in "trophy case"
+close "trophy case"
