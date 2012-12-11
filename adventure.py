@@ -104,21 +104,23 @@ class Item(Vessel):
     return result
 
   def match(self, q):
+    def q0(b):
+      return q and b and q[0].lower() == b.lower()
     if not q:
       return None
-    if q[0] == 'all':
+    if q0('all'):
       return self
-    elif q[0] == 'it':
+    elif q0('it'):
       q.pop(0)
       return self
-    elif q[0] == self.name:
+    elif q0(self.name):
       q.pop(0)
       return self
     result = None
-    if q[0] == self.adjective:
+    if q0(self.adjective):
       result = self
       q.pop(0)
-    if q and q[0] == self.type:
+    if q0(self.type):
       result = self
       q.pop(0)
     return result
@@ -179,8 +181,7 @@ class Entity(Item):
     self.move(location)
 
   def parse(self, line, depth=0):
-    words = [ALIASES.get(word,word) for word in
-             shlex.split(line.strip().lower())]
+    words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
     if not words:
       return True
     command = words.pop(0)
@@ -418,7 +419,7 @@ Room('Fork in the road',
 
 
 Room('Grassy knoll',
-     'A path leading from the northwest gives onto a grassy knoll. Upon the knoll is a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
+     'A path leading from the northwest gives onto a grassy knoll. The knoll is home to a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
      { 'northwest': 'Fork in the road' })
 class Bograt(Entity):
   def onArriveXXXXXTODO111(self, whom):
@@ -428,7 +429,7 @@ class Bograt(Entity):
         say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
 Bograt('gnoll',
        'Grassy knoll',
-       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.').name = 'bograt'
+       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.').name = 'Bograt'
 
 
 Room('Deep grass',
