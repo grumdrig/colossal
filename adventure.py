@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys, random, getopt, textwrap
+import sys, random, getopt, textwrap, shlex
 
 # Entry for http://www.pltgames.com/
 
@@ -87,7 +87,7 @@ class Item:
       self.adjective = adj and random.choice(ADJECTIVES)
     self.name = None
     self.location = None
-    self.writing = None
+    self.writing = []
     mass = type in MASS_NOUNS
     self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
     if location: self.move(location)
@@ -195,7 +195,8 @@ class Entity(Vessel):
     pass
 
   def parse(self, line, depth=0):
-    words = [ALIASES.get(word,word) for word in line.strip().lower().split()]
+    words = [ALIASES.get(word,word) for word in
+             shlex.split(line.strip().lower())]
     if not words:
       return True
     command = words.pop(0)
@@ -282,14 +283,15 @@ class Entity(Vessel):
       if not self.find(['pen']):
         say('You lack a writing implement.')
       else:
-        parchments = self.find(['blank'])
-        if not parchments:
-          say('You need some blank parchment to write on.')
+        parchments = self.find(['parchment'])
+        if len(parchments) != 1:
+          say('Write on what, exactly?')
         elif not words:
           say('What do you want to write?')
         else:
           parchment = parchments[0]
-          parchment.writing = [line.strip() for line in ' '.join(words).split(';')]
+          parchment.writing += [line.strip() for line in
+                                ' '.join(words).split(';')]
           parchment.adjective = random.choice(INSCRIBED)
 
     elif command == 'execute':

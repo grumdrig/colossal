@@ -1,6 +1,8 @@
 take all
-write east; west
+write "write east"
 execute parchment
+execute parchment
+l parchment
 quit
 write four score and seven; years ago
 write our forefathers
