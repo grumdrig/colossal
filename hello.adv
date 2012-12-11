@@ -9,9 +9,13 @@ close trophy case
 
 out
 e
+take all
 e
 se
 l bograt
 l Bograt
 l gnoll
+nw
+se
+i
 

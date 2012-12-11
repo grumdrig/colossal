@@ -109,7 +109,7 @@ class Item(Vessel):
     if not q:
       return None
     if q0('all'):
-      return self
+      return not self.furniture and self
     elif q0('it'):
       q.pop(0)
       return self
@@ -144,9 +144,8 @@ class Item(Vessel):
       say(*message)
     if dest:
       dest.items.append(self)
-      dest.onTake(self)
-    if self.location:
       self.onArrive()
+      dest.onTake(self)
     return True
 
 
@@ -418,18 +417,18 @@ Room('Fork in the road',
        'southeast': 'Grassy knoll', })
 
 
-Room('Grassy knoll',
-     'A path leading from the northwest gives onto a grassy knoll. The knoll is home to a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
-     { 'northwest': 'Fork in the road' })
-class Bograt(Entity):
-  def onArriveXXXXXTODO111(self, whom):
-    if self != whom:
-      item = whom.items and whom.items[0]
+class GrassyKnoll(Room):
+  def onTake(self, whom):
+    if whom.type == 'You':
+      item = whom.items and random.choice(whom.items)
       if item and item.move(ROOMS['Deep grass']):
         say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
-Bograt('gnoll',
-       'Grassy knoll',
-       'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.').name = 'Bograt'
+GrassyKnoll('Grassy knoll',
+            'A path leading from the northwest gives onto a grassy knoll. The knoll is home to a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
+            { 'northwest': 'Fork in the road' })
+Item('gnoll',
+     'Grassy knoll',
+     'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.').name = 'Bograt'
 
 
 Room('Deep grass',
