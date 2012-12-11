@@ -318,7 +318,7 @@ class Entity(Item):
       elif command not in self.location.resources:
         say('Dig in what?')
       else:
-        item = Item(self.location.resources[command], True)
+        item = Item(self.location.resources[command], None)
         if item.move(self):
           say('You dig up some ' + str(item) +
               ' and add it to your inventory.');
@@ -422,7 +422,7 @@ class GrassyKnoll(Room):
     if whom.type == 'You':
       item = whom.items and random.choice(whom.items)
       if item and item.move(ROOMS['Deep grass']):
-        say('Goddamn that Bograt. He stole your', item.describe(True) + '. Then he tossed it somewhere into the deep grass.')
+        say('Goddamn that Bograt. He stole your', str(item) + '. Then he tossed it somewhere into the deep grass.')
 GrassyKnoll('Grassy knoll',
             'A path leading from the northwest gives onto a grassy knoll. The knoll is home to a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
             { 'northwest': 'Fork in the road' })
