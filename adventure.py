@@ -51,7 +51,8 @@ class Furniture(Vessel):
     Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
     self.name = name
     self.description = description
-    ROOMS[location].furniture[name] = self
+    if isinstance(location, str): location = ROOMS[location]
+    location.furniture[name] = self
 
   def __str__(self):
     return self.name
@@ -353,18 +354,16 @@ class Player(Entity):
 
 
 
-ooash = Room('Outside of a small house',
-     'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white. There is a mailbox here.',
-     { 'east': 'Dirt road',
-       'west': 'Tar pit',
-       'in': 'Inside the small house',
-       }
-     )
-Item('blank parchment').move(ooash)
-Item('pen').move(ooash)
+osh = Room('Outside of a small house',
+           'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white. There is a mailbox here.',
+           { 'east': 'Dirt road',
+             'west': 'Tar pit',
+             'in': 'Inside the small house' })
+Item('blank parchment').move(osh)
+Item('pen').move(osh)
 mb = Furniture('mailbox',
                'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
-               'Outside of a small house',
+               osh,
                capacity=2,
                closed=True)
 Item('letter', mb)
