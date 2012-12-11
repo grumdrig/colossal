@@ -2,10 +2,10 @@
 
 import sys, random, getopt, textwrap
 
-# http://www.pltgames.com/
+# Entry for http://www.pltgames.com/
 
 
-ROOMS = {}
+ROOMS = { }  # Mapping from room names to rooms
 
 
 class Vessel:
@@ -29,6 +29,7 @@ class Room(Vessel):
     self.resources = resources or {}
     self.inhabitants = {}
     ROOMS[name] = self
+    ROOMS[self] = self
 
   def __str__(self):
     return self.name
@@ -193,7 +194,7 @@ class Entity(Vessel):
   def welcome(self, whom):
     pass
 
-  def parse(self, line):
+  def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in line.strip().lower().split()]
     if not words:
       return True
@@ -291,6 +292,15 @@ class Entity(Vessel):
           parchment.writing = [line.strip() for line in ' '.join(words).split(';')]
           parchment.adjective = random.choice(INSCRIBED)
 
+    elif command == 'execute':
+      orders = self.find(words)
+      if len(orders) != 1:
+        say('Execute what, exactly?')
+      else:
+        for line in orders[0].writing:
+          say('>' * (depth+2), line)
+          self.parse(line, depth+1)
+
     elif command == 'dig':
       if not self.find(['shovel']):
         say('Dig with what?')
@@ -347,10 +357,23 @@ ooash = Room('Outside of a small house',
      )
 Item('blank parchment').move(ooash)
 Item('pen').move(ooash)
+mb = Furniture('mailbox',
+               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
+               'Outside of a small house',
+               capacity=2,
+               closed=True)
+Item('letter', mb)
+
 
 Room('Inside the small house',
      'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated. Against one wall there is a trophy case.',
      { 'out': 'Outside of a small house' })
+Furniture('trophy case',
+          'This handsome trophy case features space to display up to three treasured items.',
+          'Inside the small house',
+          capacity=3,
+          closed=True,
+          locked=True);
 
 # Use this is some other description:
 # It\'s just a dirt road. Not much more to say about it than that. Should I mention the bees and butterflies again?
@@ -361,9 +384,11 @@ Room('Dirt road',
      resources={ 'dig': 'dirt' })
 Item('shovel', 'Dirt road')
 
+
 Room('Tar pit',
-     'The road leads to a noxious pit of tar. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
+     'The road leads to a noxious pit of tar. It emits noxious fumes and bubbles langoriously from time to time. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
      { 'east': 'Outside of a small house.' });
+
 
 Room('Fork in the road',
      'The road leading in from the west forks here. The northeast fork seems to head towards a rocky, hilly area. The road to the southeast is narrower and lined with tall grass.',
@@ -371,33 +396,17 @@ Room('Fork in the road',
        'northeast': 'Mouth of a cave',
        'southeast': 'Grassy knoll', })
 
+
 Room('Grassy knoll',
      'A path leading from the northwest gives onto a grassy knoll. Upon the knoll is a greasy gnoll. A gnoll is a cross between a gnome and a troll. This particular gnoll is named Bograt, and Bograt, I am sorry to tell you, is a jerk.',
      { 'northwest': 'Fork in the road' })
+
 
 Room('Deep grass',
      'The grass here is deep. It\'s like a needle in a haystack, minus the needle in here.',
      { 'out': 'Grassy knoll' })
 
-mb = Furniture('mailbox',
-               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
-               'Outside of a small house',
-               capacity=2,
-               closed=True)
-Item('letter', mb)
 
-
-Furniture('trophy case',
-          'This handsome trophy case features space to display up to three treasured items.',
-          'Inside the small house',
-          capacity=3,
-          closed=True,
-          locked=True);
-
-Furniture('tar pit',
-          'The tar pit emits noxious fumes and bubbles langoriously from time to time.',
-          'Tar pit',
-          capacity=float('inf'));
 
 class Bograt(Entity):
   def welcome(self, whom):

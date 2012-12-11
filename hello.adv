@@ -1,4 +1,7 @@
 take all
+write east; west
+execute parchment
+quit
 write four score and seven; years ago
 write our forefathers
 l paper
