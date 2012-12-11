@@ -9,21 +9,19 @@ ROOMS = {}
 
 
 class Vessel:
-  def __init__(self, items=None, capacity=0, closed=None, locked=None):
+  def __init__(self, capacity=0, closed=None, locked=None):
     self.items = []
     self.capacity = capacity or 0
     self.closed = closed
     self.locked = locked
-    for item in items or []:
-      Item(item).move(self)
     
   def find(self, q):
     return [o for o in self.items if o.match(q)]
   
 
 class Room(Vessel):
-  def __init__(self, name, description, exits, resources=None, items=None):
-    Vessel.__init__(self, items, capacity=float('inf'))
+  def __init__(self, name, description, exits, resources=None):
+    Vessel.__init__(self, capacity=float('inf'))
     self.name = name
     self.description = description
     self.exits = exits
@@ -46,8 +44,8 @@ class Room(Vessel):
 
 class Furniture(Vessel):
   def __init__(self, name, description, location,
-               contents=None, capacity=0, closed=None, locked=None):
-    Vessel.__init__(self, contents, capacity, closed, locked)
+               capacity=0, closed=None, locked=None):
+    Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
     self.name = name
     self.description = description
     ROOMS[location].furniture[name] = self
@@ -80,7 +78,7 @@ MASS_NOUNS = ['dirt'];
 
 
 class Item:
-  def __init__(self, type, adj=False):
+  def __init__(self, type, location=None, adj=False):
     if len(type.split(' ')) > 1:
       self.adjective, self.type = type.split(' ')
     else:
@@ -91,6 +89,7 @@ class Item:
     self.writing = None
     mass = type in MASS_NOUNS
     self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
+    if location: self.move(location)
 
   def __str__(self):
     result = (self.adjective + ' ' if self.adjective else '') + self.type
@@ -107,7 +106,7 @@ class Item:
         result += '\n  ' + line
       return result
     else:
-      return 'Just ' + self.an + ' ' + str(self)
+      return 'Just ' + self.an + ' ' + str(self) + '.'
 
   def match(self, q):
     if not q:
@@ -130,6 +129,8 @@ class Item:
     return result
     
   def move(self, dest):
+    if isinstance(dest, str):
+      dest = ROOMS[dest]
     if dest and (dest.capacity <= 0):
       say('Not a container!')
       return False
@@ -337,14 +338,15 @@ class Player(Entity):
 
 
 
-Room('Outside of a small house',
+ooash = Room('Outside of a small house',
      'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white. There is a mailbox here.',
      { 'east': 'Dirt road',
        'west': 'Tar pit',
        'in': 'Inside the small house',
-       },
-     items=['blank paper', 'pen'],
+       }
      )
+Item('blank paper').move(ooash)
+Item('pen').move(ooash)
 
 Room('Inside the small house',
      'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated. Against one wall there is a trophy case.',
@@ -356,8 +358,8 @@ Room('Dirt road',
      "You stand on a dirt road running east-west. The road is dirt. It's quite dirty. Beside the road is also dirt; there's dirt everywhere, in fact. Piles and piles of dirt, all around you!",
      { 'east': 'Fork in the road',
        'west': 'Outside of a small house' },
-     resources={ 'dig': 'dirt' },
-     items=['shovel'])
+     resources={ 'dig': 'dirt' })
+Item('shovel', 'Dirt road')
 
 Room('Tar pit',
      'The road leads to a noxious pit of tar. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
@@ -377,12 +379,13 @@ Room('Deep grass',
      'The grass here is deep. It\'s like a needle in a haystack, minus the needle in here.',
      { 'out': 'Grassy knoll' })
 
-Furniture('mailbox',
-          'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
-          'Outside of a small house',
-          capacity=2,
-          closed=True,
-          contents=['letter'])
+mb = Furniture('mailbox',
+               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
+               'Outside of a small house',
+               capacity=2,
+               closed=True)
+Item('letter', mb)
+
 
 Furniture('trophy case',
           'This handsome trophy case features space to display up to three treasured items.',
