@@ -170,9 +170,13 @@ class Verb:
     self.pps = {}
     self.object = None
     def parseparam(param):
+      result = { 'optional': param[-1] == '?' }
+      if result['optional']:
+        param = param[:-1]
       object = param.split(':')
-      return { 'name': object[0] or object[1],
-               'type': len(object) > 1 and object[1] }
+      result['name'] = object[0] or object[1]
+      result['type'] = len(object) > 1 and object[1]
+      return result
     while usage:
       if usage[0] == usage[0].upper():
         preposition = usage.pop(0).lower()
@@ -204,10 +208,12 @@ class Verb:
         if not obj:
           return say('What ' + word + '?')
         arguments[self.object['name']] = obj
-    if self.object and self.object['name'] not in arguments:
-      return say(self.verb, 'what?')
+    if (self.object and
+        self.object['name'] not in arguments and
+        not self.object['optional']):
+      return say(self.verb, 'what?', self.object)
     for p,v in self.pps.items():
-      if v['name'] not in arguments:
+      if v['name'] not in arguments and not v['optional']:
         return say(self.verb, p, 'what?')
     getattr(subject, self.verb)(**arguments)
           
@@ -228,6 +234,7 @@ class Entity(Item):
       items = self.find([item]) or self.location.find([item])
       return items and items[0] or None
 
+  Verb('INVENTORY')
   def inventory(self):
     if self.items:
       say('You are currently holding:')
@@ -236,6 +243,7 @@ class Entity(Item):
     else:
       say('You are empty-handed.')
 
+  Verb('GO direction:str')
   def go(self, direction):
     if direction not in self.location.exits:
       say("You can't go that way.")
@@ -263,6 +271,11 @@ class Entity(Item):
     parchment.writing = []
     say('You erase everything written on ' + str(parchment) + '.')
 
+  Verb('LOOK thing?')
+  def look(self, thing=None):
+    say((thing or self.location).describe())
+
+
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
     if not words:
@@ -272,16 +285,6 @@ class Entity(Item):
     if command == 'quit':
       say('Goodbye!')
       return False
-
-    elif command == 'inventory':
-      self.inventory()
-
-    elif command == 'look':
-      thing = self.resolve(words) if words else self.location
-      say(thing.describe() if thing else 'What ' + words[0] + '?')
-
-    elif command == 'go':
-      self.go(words.pop(0))
 
     elif command == 'take':
       items = self.location.find(words)
