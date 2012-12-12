@@ -10,6 +10,17 @@ read journal
 n
 n
 l robot
+write four score; and seven years; ago
+l parchment
+n
+n
+put parchment in shredder
+l shredder
+take parchment
+read parchment
+take parchment
+read parchment
+
 
 quit
 i

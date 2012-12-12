@@ -2,8 +2,6 @@
 
 import sys, random, getopt, textwrap, shlex
 
-# Entry for http://www.pltgames.com/
-
 
 ROOMS = { }  # Mapping from room names to rooms
 
@@ -65,8 +63,7 @@ MASS_NOUNS = ['dirt'];
 
 
 class Item(Vessel):
-  def __init__(self, type, location, 
-               description=None, adj=False, furniture=False,
+  def __init__(self, type, location, description=None,
                capacity=0, closed=None, locked=None):
     Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
     if len(type.split(' ')) > 1:
@@ -74,13 +71,13 @@ class Item(Vessel):
     else:
       self.type = type
       self.adjective = None
-    self.description = description
     self.name = None
     self.location = None
-    self.furniture = furniture
+    self.fixed = False
     self.writing = []
     mass = type in MASS_NOUNS
     self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
+    self.description = description or "It's " + self.an + ' ' + str(self) + '.'
     if location: self.move(location)
 
   def __str__(self):
@@ -92,7 +89,7 @@ class Item(Vessel):
   def describe(self, brief=False):
     if brief:
       return self.an + ' ' + str(self)
-    result = self.description or 'Just ' + self.an + ' ' + str(self) + '.'
+    result = self.description
     if self.writing:
       result += ' Written on it are these words:'
       for line in self.writing:
@@ -112,7 +109,7 @@ class Item(Vessel):
     if not q:
       return None
     if q0('all'):
-      return not self.furniture and self
+      return not self.fixed and self
     elif q0('it'):
       q.pop(0)
       return self
@@ -129,7 +126,7 @@ class Item(Vessel):
     return result
     
   def move(self, dest, *message):
-    if self.furniture and (self.location and dest):
+    if self.fixed and (self.location and dest):
       say('The', self, "can't be moved.")
       return False
     if isinstance(dest, str):
@@ -152,10 +149,18 @@ class Item(Vessel):
     return True
 
 
+class Furniture(Item):
+  def __init__(self, type, location, description=None,
+               capacity=float('inf'), closed=None, locked=None):
+    Item.__init__(self, type, location, description=description,
+                  capacity=capacity, closed=closed, locked=locked)
+    self.fixed = True
+
+
 class Entity(Item):
   def __init__(self, type, location, description):
-    Item.__init__(self, type, location, description, capacity=9, furniture=True)
-    self.go(ROOMS[location])
+    Item.__init__(self, type, location, description, capacity=9)
+    self.fixed = True
 
   def resolve(self, q):
     if not q: return None
@@ -186,7 +191,7 @@ class Entity(Item):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
     if not words:
       return True
-    command = words.pop(0)
+    command = words.pop(0).lower()
 
     if command == 'quit':
       say('Goodbye!')
@@ -245,8 +250,7 @@ class Entity(Item):
           say("The " + str(dest) + " is closed.")
         else:
           for item in items:
-            if item.move(dest):
-              say('You put the ' + str(item) + ' in the ' + str(dest) + '.')
+            item.move(dest, 'You put the', item, 'in the', str(dest) + '.')
 
     elif command == 'open':
       what = self.resolve(words)
@@ -304,6 +308,7 @@ class Entity(Item):
           parchment = parchments[0]
           parchment.write(' '.join(words))
           parchment.adjective = random.choice(INSCRIBED)
+          say('You write on the', str(parchment) + '.')
 
     elif command == 'execute':
       orders = self.find(words)
@@ -313,6 +318,9 @@ class Entity(Item):
         for line in orders[0].writing:
           say('>' * (depth+2), line)
           self.parse(line, depth+1)
+
+    elif command == 'xyzzy':
+      say('Nothing happens.')
 
     elif command == 'dig':
       if not self.find(['shovel']):
@@ -367,12 +375,11 @@ osh = Room('Outside of a small house',
              'west': 'Crossroads',
              'in': 'Inside the small house' })
 Item('blank parchment', osh)
-mb = Item('mailbox',
-          osh,
-          'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
-          furniture=True,
-          capacity=2,
-          closed=True)
+mb = Furniture('mailbox',
+               osh,
+               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
+               capacity=2,
+               closed=True)
 Item('letter', mb)
 
 ####################################################
@@ -380,7 +387,7 @@ Item('letter', mb)
 Room('Inside the small house',
      'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated.',
      { 'out': 'Outside of a small house' })
-class TrophyCase(Item):
+class TrophyCase(Furniture):
   def onClose(self):
     if self.items:
       say('AN INFINITE EXHILARATION THRUMS IN YOUR HEART')
@@ -391,7 +398,6 @@ class TrophyCase(Item):
 TrophyCase('trophy case',
            'Inside the small house',
            'Against one overdecorated wall there is a trophy case. This handsome case offers display space for a few treasured items.',
-           furniture=True,
            capacity=3,
            closed=True,
            locked=True);
@@ -481,7 +487,7 @@ Room('Cave foyer',
        'north': 'Narrow passage' })
 pack = Item('backpack', 'Cave foyer', capacity=6)
 Item('pen', pack)
-Item('journal', pack).write('August 13;;Down to my last stick of gum. I should have brought more food and less gum.;;The exit from this cave must be somewhere around here, but I lack the strength to keep looking.;;...')
+Item('journal page', pack).write('August 13;;Down to my last stick of gum. I should have brought more food and less gum.;;The exit from this cave must be somewhere around here, but I lack the strength to keep looking.;;...')
 
 ####################################################
 
@@ -503,7 +509,31 @@ Entity('robot', 'Chamber',
 
 ####################################################
 
+Room('North chamber',
+     "The rough, natural passage entering this chamber from the south, not to mention the craggy subterranean setting in general, contrast sharply with the professional glass and steel facade to the north. The design work is modern and impeccable. Lettered over the door in 900pt Helvetica are the words:\n  Calloway, Papermaster, Turban and Hoyt LLC\n               Attorneys at Law",
+     { 'south': 'Chamber',
+       'north': 'Reception' })
 
+####################################################
+
+Room('Reception',
+     "The room's centerpiece is an all-glass desk providing a clear view of the receptionist's knees, were there a receptionist present. Convenient to the desk is a document shredder.\nThe office exit is to the south, a doorway to a small room lies east and a hallway stretches to the north.",
+     { 'south': 'North chamber',
+       'north': 'Hallway',
+       'east': 'Copier room' })
+class Shredder(Furniture):
+  def onTake(self, item):
+    if item.type == 'parchment' and len(item.writing) > 1:
+      item.move(None)
+      for shred in item.writing:
+        Item('shredded parchment', self).write(shred)
+      say('The', item, 'is shredded into', str(len(item.writing)), 'strips.')
+Shredder('shredder', 'Reception', 'Model 8678b Vellum Shredder. "For When You\'ve Got Something to Hide". (You may have missed it, but that was a pun, just there.)')
+
+#-------------------------------------------------------------
+
+
+     
 
 
 def Cap(s):
@@ -562,7 +592,6 @@ def main():
   say()
 
   player = Player('Outside of a small house')
-  say(player.location.describe())
   
   if args:
     for i in args:
