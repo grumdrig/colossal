@@ -105,10 +105,6 @@ class Item(Vessel):
   def write(self, text):
     self.writing += [line.strip() for line in text.split(';')]
 
-  def dowrite(self, text, pen, paper):
-    paper.write(text)
-    say('You write on the', str(paper) + '.')
-
   def match(self, q):
     def q0(b):
       return q and b and q[0].lower() == b.lower()
@@ -163,6 +159,50 @@ class Furniture(Item):
     self.fixed = True
 
 
+VERBS = {}
+
+class Verb:
+  def __init__(self, usage):
+    usage = usage.split(' ')
+    self.verb = usage.pop(0).lower()
+    self.pps = {}
+    self.object = None
+    while usage:
+      if usage[0] == usage[0].upper():
+        preposition = usage.pop(0).lower()
+        object = usage.pop(0).split(':')
+        self.pps[preposition] = { 'name': object[0] or object[1],
+                                  'type': len(object) > 1 and object[1] }
+      else:
+        self.object = usage.pop(0)
+    VERBS[self.verb] = self
+
+  def do(self, subject, input):
+    input = input[:]
+    arguments = {}
+    while input:
+      word = input.pop(0)
+      if word.lower() in self.pps:
+        pp = self.pps[word.lower()]
+        item = input.pop(0)
+        obj = subject.resolve([item])
+        if not obj:
+          return say('What ' + item + '?')
+        if pp['type'] and pp['type'] != obj.type:
+          return say('The', obj, "can't be used for that.")
+        arguments[pp['name']] = obj
+      elif not self.object or self.object in arguments:
+        return say('You lost me at "' + word + '".')
+      else:
+        arguments[self.object] = word
+    if self.object and self.object not in arguments:
+      return say(self.verb, 'what?')
+    for p,v in self.pps.items():
+      if v['name'] not in arguments:
+        return say(self.verb, p, 'what?')
+    getattr(subject, 'do' + self.verb)(**arguments)
+          
+
 class Entity(Item):
   def __init__(self, type, location, description):
     Item.__init__(self, type, location, description, capacity=9)
@@ -192,6 +232,20 @@ class Entity(Item):
       location = ROOMS[self.location.exits[location]]
     self.move(None)
     self.move(location)
+
+  Verb('WRITE text WITH :pen ON paper:parchment')
+  def dowrite(self, text, pen, paper):
+    paper.write(text)
+    say('You write on the', str(paper) + '.')
+
+  Verb('DIG WITH :shovel')
+  def dodig(self, shovel):
+    if 'dig' not in self.location.resources:
+      say("Digging here is fruitless.")
+    else:
+      item = Item(self.location.resources['dig'], None)
+      if item.move(self):
+        say('You dig up some', item, 'and add it to your inventory.');
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
@@ -301,21 +355,6 @@ class Entity(Item):
         what.locked = True
         say('You lock the', str(what) + '.')
 
-    elif command == 'writeXXXXXXX':
-      if not self.find(['pen']):
-        say('You lack a writing implement.')
-      else:
-        parchments = self.find(['parchment'])
-        if len(parchments) != 1:
-          say('Write on what, exactly?')
-        elif not words:
-          say('What do you want to write?')
-        else:
-          parchment = parchments[0]
-          parchment.write(' '.join(words))
-          parchment.adjective = random.choice(INSCRIBED)
-          say('You write on the', str(parchment) + '.')
-
     elif command == 'execute':
       orders = self.find(words)
       if len(orders) != 1:
@@ -327,17 +366,6 @@ class Entity(Item):
 
     elif command == 'xyzzy':
       say('Nothing happens.')
-
-    elif command == 'dig':
-      if not self.find(['shovel']):
-        say('Dig with what?')
-      elif command not in self.location.resources:
-        say('Dig in what?')
-      else:
-        item = Item(self.location.resources[command], None)
-        if item.move(self):
-          say('You dig up some ' + str(item) +
-              ' and add it to your inventory.');
 
     elif command in self.location.exits.keys():
       # just a direction. "go" is implied
@@ -375,53 +403,6 @@ class Player(Entity):
     say(self.location.describe(self.location.name in self.visited))
     self.visited.add(self.location.name)
 
-
-VERBS = {}
-
-class Verb:
-  def __init__(self, usage):
-    usage = usage.split(' ')
-    self.verb = usage.pop(0).lower()
-    self.pps = {}
-    self.object = None
-    while usage:
-      if usage[0] == usage[0].upper():
-        preposition = usage.pop(0).lower()
-        object = usage.pop(0).split(':')
-        self.pps[preposition] = { 'name': object[0] or object[1],
-                                  'type': len(object) > 1 and object[1] }
-      else:
-        self.object = usage.pop(0)
-    VERBS[self.verb] = self
-
-  def do(self, subject, input):
-    input = input[:]
-    arguments = {}
-    while input:
-      word = input.pop(0)
-      if word.lower() in self.pps:
-        pp = self.pps[word.lower()]
-        obj = input.pop(0)
-        obj = subject.resolve([obj])
-        if pp['type'] and pp['type'] != obj.type:
-          say('The', obj, "can't be used for that.")
-          return
-        arguments[pp['name']] = obj
-      else:
-        arguments[self.object] = word
-    if self.object and self.object not in arguments:
-      say(self.verb, 'what?')
-      return
-    for p,v in self.pps.items():
-      if v['name'] not in arguments:
-        say(p, 'what?')
-        return
-    getattr(subject, 'do' + self.verb)(**arguments)
-          
-    
-    
-
-Verb('WRITE text WITH :pen ON paper:parchment')
 
 
 ####################################################

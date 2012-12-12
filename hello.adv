@@ -1,5 +1,11 @@
 take all
 east
+take all
+dig
+dig with shovel
+i
+quit 
+
 east
 ne
 in
@@ -11,6 +17,11 @@ write "leg" with pen on parchment
 write on parchment "other leg" with pen 
 write with parchment on pen 'poop'
 write on parchment with pen
+write on parchment with pen one two
+
+dig
+dig with shovel
+
 l parchment
 
 quit
