@@ -3,8 +3,18 @@ east
 east
 ne
 in
-l backpack
 take pen
+
+write "arms" on parchment
+write "head" with pen
+write "leg" with pen on parchment
+write on parchment "other leg" with pen 
+write with parchment on pen 'poop'
+write on parchment with pen
+l parchment
+
+quit
+
 take journal
 read journal
 n

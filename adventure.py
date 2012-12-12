@@ -38,12 +38,14 @@ class Room(Vessel):
     return self.name
 
   def describe(self, brief=False):
-    result = self.name
+    if brief:
+      return self.name
+    result = self.name.upper()
     if not brief:
-      result += '\n' + self.description
+      result += '\n\n' + self.description
       for item in self.items:
         if item.type != 'You':
-          result += '\nThere is ' + item.describe(True) + ' here.'
+          result += '\n\nThere is ' + item.describe(True) + ' here.'
     return result
           
 
@@ -100,8 +102,12 @@ class Item(Vessel):
         result += '\n  ' + Cap(item.describe(True)) + '.'
     return result
 
-  def write(self, content):
-    self.writing += [line.strip() for line in content.split(';')]
+  def write(self, text):
+    self.writing += [line.strip() for line in text.split(';')]
+
+  def dowrite(self, text, pen, paper):
+    paper.write(text)
+    say('You write on the', str(paper) + '.')
 
   def match(self, q):
     def q0(b):
@@ -295,7 +301,7 @@ class Entity(Item):
         what.locked = True
         say('You lock the', str(what) + '.')
 
-    elif command == 'write':
+    elif command == 'writeXXXXXXX':
       if not self.find(['pen']):
         say('You lack a writing implement.')
       else:
@@ -337,8 +343,11 @@ class Entity(Item):
       # just a direction. "go" is implied
       self.go(command)
 
+    elif VERBS[command]:
+      VERBS[command].do(self, words)
+
     else:
-      say('I did not understand that command.')
+      say('I did not understand that.')
 
     return True
 
@@ -365,6 +374,54 @@ class Player(Entity):
   def onArrive(self):
     say(self.location.describe(self.location.name in self.visited))
     self.visited.add(self.location.name)
+
+
+VERBS = {}
+
+class Verb:
+  def __init__(self, usage):
+    usage = usage.split(' ')
+    self.verb = usage.pop(0).lower()
+    self.pps = {}
+    self.object = None
+    while usage:
+      if usage[0] == usage[0].upper():
+        preposition = usage.pop(0).lower()
+        object = usage.pop(0).split(':')
+        self.pps[preposition] = { 'name': object[0] or object[1],
+                                  'type': len(object) > 1 and object[1] }
+      else:
+        self.object = usage.pop(0)
+    VERBS[self.verb] = self
+
+  def do(self, subject, input):
+    input = input[:]
+    arguments = {}
+    while input:
+      word = input.pop(0)
+      if word.lower() in self.pps:
+        pp = self.pps[word.lower()]
+        obj = input.pop(0)
+        obj = subject.resolve([obj])
+        if pp['type'] and pp['type'] != obj.type:
+          say('The', obj, "can't be used for that.")
+          return
+        arguments[pp['name']] = obj
+      else:
+        arguments[self.object] = word
+    if self.object and self.object not in arguments:
+      say(self.verb, 'what?')
+      return
+    for p,v in self.pps.items():
+      if v['name'] not in arguments:
+        say(p, 'what?')
+        return
+    getattr(subject, 'do' + self.verb)(**arguments)
+          
+    
+    
+
+Verb('WRITE text WITH :pen ON paper:parchment')
 
 
 ####################################################
