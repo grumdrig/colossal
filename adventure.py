@@ -167,14 +167,16 @@ class Verb:
     self.verb = usage.pop(0).lower()
     self.pps = {}
     self.object = None
+    def parseparam(param):
+      object = param.split(':')
+      return { 'name': object[0] or object[1],
+               'type': len(object) > 1 and object[1] }
     while usage:
       if usage[0] == usage[0].upper():
         preposition = usage.pop(0).lower()
-        object = usage.pop(0).split(':')
-        self.pps[preposition] = { 'name': object[0] or object[1],
-                                  'type': len(object) > 1 and object[1] }
+        self.pps[preposition] = parseparam(usage.pop(0))
       else:
-        self.object = usage.pop(0)
+        self.object = parseparam(usage.pop(0))
     VERBS[self.verb] = self
 
   def do(self, subject, input):
@@ -191,16 +193,21 @@ class Verb:
         if pp['type'] and pp['type'] != obj.type:
           return say('The', obj, "can't be used for that.")
         arguments[pp['name']] = obj
-      elif not self.object or self.object in arguments:
+      elif not self.object or self.object['name'] in arguments:
         return say('You lost me at "' + word + '".')
+      elif self.object['type'] == 'str':
+        arguments[self.object['name']] = word
       else:
-        arguments[self.object] = word
-    if self.object and self.object not in arguments:
+        obj = subject.resolve([word])
+        if not obj:
+          return say('What ' + word + '?')
+        arguments[self.object['name']] = obj
+    if self.object and self.object['name'] not in arguments:
       return say(self.verb, 'what?')
     for p,v in self.pps.items():
       if v['name'] not in arguments:
         return say(self.verb, p, 'what?')
-    getattr(subject, 'do' + self.verb)(**arguments)
+    getattr(subject, self.verb)(**arguments)
           
 
 class Entity(Item):
@@ -228,24 +235,28 @@ class Entity(Item):
       say('You are empty-handed.')
 
   def go(self, location):
-    if isinstance(location, str):
-      location = ROOMS[self.location.exits[location]]
+    location = ROOMS[self.location.exits[location]]
     self.move(None)
     self.move(location)
 
-  Verb('WRITE text WITH :pen ON paper:parchment')
-  def dowrite(self, text, pen, paper):
+  Verb('WRITE text:str WITH :pen ON paper:parchment')
+  def write(self, text, pen, paper):
     paper.write(text)
     say('You write on the', str(paper) + '.')
 
   Verb('DIG WITH :shovel')
-  def dodig(self, shovel):
+  def dig(self, shovel):
     if 'dig' not in self.location.resources:
       say("Digging here is fruitless.")
     else:
       item = Item(self.location.resources['dig'], None)
       if item.move(self):
         say('You dig up some', item, 'and add it to your inventory.');
+
+  Verb('ERASE :parchment')
+  def erase(self, parchment):
+    parchment.writing = []
+    say('You erase everything written on ' + str(parchment) + '.')
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
@@ -371,7 +382,7 @@ class Entity(Item):
       # just a direction. "go" is implied
       self.go(command)
 
-    elif VERBS[command]:
+    elif command in VERBS:
       VERBS[command].do(self, words)
 
     else:
@@ -411,6 +422,7 @@ osh = Room('Outside of a small house',
            'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white.',
            { 'east': 'Dirt road',
              'west': 'Crossroads',
+             'cheat': 'Cheaterville',
              'in': 'Inside the small house' })
 Item('blank parchment', osh)
 mb = Furniture('mailbox',
@@ -419,6 +431,14 @@ mb = Furniture('mailbox',
                capacity=2,
                closed=True)
 Item('letter', mb)
+
+####################################################
+
+cv = Room('Cheaterville',
+          'Nothing to see here. Move along.',
+          { 'uncheat': osh })
+Item('parchment', cv).name = 'pp'
+Item('pen', cv).name = 'pn'
 
 ####################################################
 

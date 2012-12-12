@@ -1,3 +1,13 @@
+cheat
+take all
+write "write a on pp with pn" on pp with pn
+write "erase pp" on pp with pn
+write "write b on pp with pn" on pp with pn
+l pp
+execute pp
+l pp
+quit
+
 take all
 east
 take all
