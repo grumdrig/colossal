@@ -4,7 +4,7 @@ import sys, random, getopt, textwrap, shlex
 
 
 ROOMS = { }  # Mapping from room names to rooms
-
+DIRECTIONS = set()  # All possible directions one might go
 
 class Vessel:
   def __init__(self, capacity=0, closed=None, locked=None):
@@ -31,6 +31,8 @@ class Room(Vessel):
     self.name = name
     self.description = description
     self.exits = exits
+    global DIRECTIONS
+    DIRECTIONS |= set(exits.keys())
     self.resources = resources or {}
     ROOMS[name] = self
 
@@ -234,10 +236,13 @@ class Entity(Item):
     else:
       say('You are empty-handed.')
 
-  def go(self, location):
-    location = ROOMS[self.location.exits[location]]
-    self.move(None)
-    self.move(location)
+  def go(self, direction):
+    if direction not in self.location.exits:
+      say("You can't go that way.")
+    else:
+      location = ROOMS[self.location.exits[direction]]
+      self.move(None)
+      self.move(location)
 
   Verb('WRITE text:str WITH :pen ON paper:parchment')
   def write(self, text, pen, paper):
@@ -378,8 +383,7 @@ class Entity(Item):
     elif command == 'xyzzy':
       say('Nothing happens.')
 
-    elif command in self.location.exits.keys():
-      # just a direction. "go" is implied
+    elif command in DIRECTIONS:
       self.go(command)
 
     elif command in VERBS:
