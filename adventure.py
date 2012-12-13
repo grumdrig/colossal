@@ -400,7 +400,9 @@ class Entity(Item):
       else:
         for line in orders[0].writing:
           say('>' * (depth+2), line)
-          self.parse(line, depth+1)
+          if not self.parse(line, depth+1):
+            break
+          
 
     elif command == 'xyzzy':
       say('Nothing happens.')
