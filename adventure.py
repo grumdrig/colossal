@@ -656,6 +656,10 @@ ALIASES = {
   'myself': 'self',
   'yourself': 'self',
   'rename': 'call',
+  'follow': 'obey',
+  'execute': 'obey',
+  'perform': 'obey',
+  'interpret': 'obey',
 }
 
 
