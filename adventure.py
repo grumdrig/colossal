@@ -69,7 +69,7 @@ MASS_NOUNS = ['dirt'];
 
 class Item(Vessel):
   def __init__(self, type, location, description=None,
-               capacity=0, closed=None, locked=None):
+               capacity=0, closed=None, locked=None, qty=None):
     Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
     if len(type.split(' ')) > 1:
       self.adjective, self.type = type.split(' ')
@@ -80,9 +80,8 @@ class Item(Vessel):
     self.location = None
     self.fixed = False
     self.writing = []
-    mass = type in MASS_NOUNS
-    self.an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
-    self.description = description or "It's " + self.an + ' ' + str(self) + '.'
+    self.description = description
+    self.qty = qty
     if location: self.move(location)
 
   def __str__(self):
@@ -92,9 +91,14 @@ class Item(Vessel):
     return result
 
   def describe(self, brief=False):
+    mass = self.type in MASS_NOUNS
+    if self.qty:
+      an = str(self.qty) + ' kg of'
+    else:
+      an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
     if brief:
-      return self.an + ' ' + str(self)
-    result = self.description
+      return an + ' ' + str(self)
+    result = self.description or "It's " + an + ' ' + str(self) + '.'
     if self.writing:
       result += ' Written on it are these words:'
       for line in self.writing:
@@ -139,16 +143,20 @@ class Item(Vessel):
     if dest and (dest.capacity <= 0):
       say('Not a container!')
       return False
-    if dest and (len(dest.items) >= dest.capacity):
-      say('No more room!')
-      return False
+    if dest and self.qty and self.type in [i.type for i in dest.items]:
+      others = [i for i in dest.items if i.type == self.type]
+      others[0].qty += self.qty
+    elif dest:
+      if len(dest.items) >= dest.capacity:
+        say('No more room!')
+        return False
+      dest.items.append(self)
     if self.location:
       self.location.items.remove(self)
     self.location = dest
     if message:
       say(*message)
     if dest:
-      dest.items.append(self)
       self.onArrive()
       dest.onTake(self)
     return True
@@ -268,7 +276,7 @@ class Entity(Item):
     if 'dig' not in self.location.resources:
       say("Digging here is fruitless.")
     else:
-      item = Item(self.location.resources['dig'], None)
+      item = Item(self.location.resources['dig'], None, qty=1)
       if item.move(self):
         say('You dig up some', item, 'and add it to your inventory.');
 
@@ -336,6 +344,7 @@ class Entity(Item):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
     if not words:
       return True
+
     command = words.pop(0).lower()
 
     if command in VERBS:
