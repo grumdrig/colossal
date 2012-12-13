@@ -193,12 +193,15 @@ class Verb:
       if word.lower() in self.pps:
         pp = self.pps[word.lower()]
         item = input.pop(0)
-        obj = subject.resolve([item])
-        if not obj:
-          return say('What ' + item + '?')
-        if pp['type'] and pp['type'] != obj.type:
-          return say('The', obj, "can't be used for that.")
-        arguments[pp['name']] = obj
+        if pp['type'] == 'str':
+          arguments[pp['name']] = item
+        else:
+          obj = subject.resolve([item]) 
+          if not obj:
+            return say('What ' + item + '?')
+          if pp['type'] and pp['type'] != obj.type:
+            return say('The', obj, "can't be used for that.")
+          arguments[pp['name']] = obj
       elif not self.object or self.object['name'] in arguments:
         return say('You lost me at "' + word + '".')
       elif self.object['type'] == 'str':
@@ -275,6 +278,10 @@ class Entity(Item):
   def look(self, thing=None):
     say((thing or self.location).describe())
 
+  Verb('RENAME item AS name:str')
+  def rename(self, item, name):
+    item.name = name
+    say("We'll call it \"" + name + '" from now on.')
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
@@ -306,15 +313,6 @@ class Entity(Item):
         for item in items:
           item.move(self.location, str(item), 'dropped.')
 
-    elif command == 'call':
-      items = self.find(words)
-      if len(items) != 1:
-        say("Call what what?")
-      elif not words:
-        say ('Call it what?')
-      else:
-        items[0].name = words[0]
-      
     elif command == 'put' and len(words) >= 3 and words[1] == 'in':
       items = self.find(words)
       if not items:
