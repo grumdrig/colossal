@@ -22,6 +22,7 @@ class Vessel:
 
   def onTake(self, item): pass
   def onArrive(self): pass
+  def onClose(self): pass
 
   
 
@@ -285,6 +286,51 @@ class Entity(Item):
     item.name = name
     say("We'll call it \"" + name + '" from now on.')
 
+  Verb('OPEN vessel')
+  def open(self, vessel):
+    if vessel.closed == None:
+      say('The', vessel, "can't be opened.")
+    elif not vessel.closed:
+      say('The', vessel, 'is already open.')
+    elif vessel.locked:
+      say('The', vessel, 'is locked.')
+    else:
+      vessel.closed = False
+      say('The', vessel, 'is now open.')
+
+  Verb('CLOSE vessel')
+  def close(self, vessel):
+    if vessel.closed == None:
+      say('The', vessel, "can't be closed.")
+    elif vessel.closed != False:
+      say('The', vessel, 'is already closed.')
+    else:
+      vessel.closed = True
+      say('The', vessel, 'is now closed.')
+      vessel.onClose()
+
+  Verb('UNLOCK vessel')
+  def unlock(self, vessel):
+    if vessel.locked == None:
+      say('The', vessel, "can't be unlocked.")
+    elif not vessel.locked:
+      say('The', vessel, 'is not locked.')
+    else:
+      vessel.locked = False
+      say('You unlock the', str(vessel) + '.')
+
+  Verb('LOCK vessel')
+  def lock(self, vessel):
+    if vessel.locked == None:
+      say('The', vessel, "can't be locked.")
+    elif not vessel.closed:
+      say("You'll have to close the", vessel, 'first.')
+    elif vessel.locked:
+      say('The', vessel, 'is already locked.')
+    else:
+      vessel.locked = True
+      say('You lock the', str(vessel) + '.')
+
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
@@ -331,49 +377,6 @@ class Entity(Item):
         else:
           for item in items:
             item.move(dest, 'You put the', item, 'in the', str(dest) + '.')
-
-    elif command == 'open':
-      what = self.resolve(words)
-      if not what:
-        say('Open what?')
-      elif not what.closed:
-        say('The', str(what), 'is not closed.')
-      elif what.locked:
-        say('The', str(what), 'is locked.')
-      else:
-        what.closed = False
-        say('The', str(what), 'is now open.')
-
-    elif command == 'close':
-      what = self.resolve(words)
-      if not what:
-        say('Close what?')
-      elif what.closed != False:
-        say('The', str(what), 'is not open.')
-      else:
-        what.closed = True
-        say('The', str(what), 'is now closed.')
-        what.onClose()
-
-    elif command == 'unlock':
-      what = self.resolve(words)
-      if not what:
-        say('Unlock what?')
-      elif not what.locked:
-        say('The', what, 'is not locked.')
-      else:
-        what.locked = False
-        say('You unlock the', str(what) + '.')
-
-    elif command == 'lock':
-      what = self.resolve(words)
-      if not what:
-        say('Unlock what?')
-      elif what.locked != False:
-        say('The', what, 'is not unlocked.')
-      else:
-        what.locked = True
-        say('You lock the', str(what) + '.')
 
     elif command == 'execute':
       orders = self.find(words)
