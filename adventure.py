@@ -393,10 +393,10 @@ class Entity(Item):
           for item in items:
             item.move(dest, 'You put the', item, 'in the', str(dest) + '.')
 
-    elif command == 'execute':
+    elif command == 'obey':
       orders = self.find(words)
       if len(orders) != 1:
-        say('Execute what, exactly?')
+        say('Obey what, exactly?')
       else:
         for line in orders[0].writing:
           say('>' * (depth+2), line)
