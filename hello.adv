@@ -1,5 +1,5 @@
 cheat
 take all
-write with pen on pp "i;quit;l"
-obey pp
+write with pen on pp "i;drop pp;l"
+execute pp
 

@@ -398,10 +398,13 @@ class Entity(Item):
       if len(orders) != 1:
         say('Obey what, exactly?')
       else:
-        for line in orders[0].writing:
+        orders = orders[0]
+        for line in orders.writing:
           say('>' * (depth+2), line)
           if not self.parse(line, depth+1):
             break
+          if orders.location != self:
+            break  # stop if paper gets dropped
           
 
     elif command == 'xyzzy':
