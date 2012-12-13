@@ -168,7 +168,7 @@ class Verb:
     usage = usage.split(' ')
     self.verb = usage.pop(0).lower()
     self.pps = {}
-    self.object = None
+    self.objects = []
     def parseparam(param):
       result = { 'optional': param[-1] == '?' }
       if result['optional']:
@@ -182,12 +182,13 @@ class Verb:
         preposition = usage.pop(0).lower()
         self.pps[preposition] = parseparam(usage.pop(0))
       else:
-        self.object = parseparam(usage.pop(0))
+        self.objects.append(parseparam(usage.pop(0)))
     VERBS[self.verb] = self
 
   def do(self, subject, input):
     input = input[:]
     arguments = {}
+    nobjects = 0
     while input:
       word = input.pop(0)
       if word.lower() in self.pps:
@@ -202,19 +203,20 @@ class Verb:
           if pp['type'] and pp['type'] != obj.type:
             return say('The', obj, "can't be used for that.")
           arguments[pp['name']] = obj
-      elif not self.object or self.object['name'] in arguments:
+      elif nobjects >= len(self.objects):
         return say('You lost me at "' + word + '".')
-      elif self.object['type'] == 'str':
-        arguments[self.object['name']] = word
+      elif self.objects[nobjects]['type'] == 'str':
+        arguments[self.objects[nobjects]['name']] = word
+        nobjects += 1
       else:
         obj = subject.resolve([word])
         if not obj:
           return say('What ' + word + '?')
-        arguments[self.object['name']] = obj
-    if (self.object and
-        self.object['name'] not in arguments and
-        not self.object['optional']):
-      return say(self.verb, 'what?', self.object)
+        arguments[self.objects[nobjects]['name']] = obj
+        nobjects += 1
+    if (nobjects < len(self.objects) and
+        not self.objects[nobjects]['optional']):
+      return say(self.verb, 'what', self.objects[nobjects]['name'] + '?')
     for p,v in self.pps.items():
       if v['name'] not in arguments and not v['optional']:
         return say(self.verb, p, 'what?')
@@ -278,10 +280,11 @@ class Entity(Item):
   def look(self, thing=None):
     say((thing or self.location).describe())
 
-  Verb('RENAME item AS name:str')
-  def rename(self, item, name):
+  Verb('CALL item name:str')
+  def call(self, item, name):
     item.name = name
     say("We'll call it \"" + name + '" from now on.')
+
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
@@ -638,6 +641,7 @@ ALIASES = {
   'me': 'self',
   'myself': 'self',
   'yourself': 'self',
+  'rename': 'call',
 }
 
 
