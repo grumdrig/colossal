@@ -338,7 +338,13 @@ class Entity(Item):
       return True
     command = words.pop(0).lower()
 
-    if command == 'quit':
+    if command in VERBS:
+      VERBS[command].do(self, words)
+
+    elif command in DIRECTIONS:
+      self.go(command)
+
+    elif command == 'quit':
       say('Goodbye!')
       return False
 
@@ -389,12 +395,6 @@ class Entity(Item):
 
     elif command == 'xyzzy':
       say('Nothing happens.')
-
-    elif command in DIRECTIONS:
-      self.go(command)
-
-    elif command in VERBS:
-      VERBS[command].do(self, words)
 
     else:
       say('I did not understand that.')
