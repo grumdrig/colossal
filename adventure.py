@@ -183,9 +183,10 @@ class Verb:
     self.pps = {}
     self.objects = []
     def parseparam(param):
-      result = { 'optional': param[-1] == '?' }
-      if result['optional']:
-        param = param[:-1]
+      result = { 'optional': param[-1] == '?',
+                 'multi': param[0] == '*' }
+      if result['optional']: param = param[:-1]
+      if result['multi']: param = param[1:]
       object = param.split(':')
       result['name'] = object[0] or object[1]
       result['type'] = len(object) > 1 and object[1]
@@ -203,30 +204,26 @@ class Verb:
     arguments = {}
     nobjects = 0
     while input:
-      word = input.pop(0)
-      if word.lower() in self.pps:
-        pp = self.pps[word.lower()]
-        item = input.pop(0)
-        if pp['type'] == 'str':
-          arguments[pp['name']] = item
-        else:
-          obj = subject.resolve([item]) 
-          if not obj:
-            return say('What ' + item + '?')
-          if pp['type'] and pp['type'] != obj.type:
-            return say('The', obj, "can't be used for that.")
-          arguments[pp['name']] = obj
+      parameter = self.pps.get(input[0].lower())
+      if parameter:
+        input.pop(0)
       elif nobjects >= len(self.objects):
         return say('You lost me at "' + word + '".')
-      elif self.objects[nobjects]['type'] == 'str':
-        arguments[self.objects[nobjects]['name']] = word
-        nobjects += 1
       else:
-        obj = subject.resolve([word])
-        if not obj:
-          return say('What ' + word + '?')
-        arguments[self.objects[nobjects]['name']] = obj
+        parameter = self.objects[nobjects]
         nobjects += 1
+        
+      item = input.pop(0)
+      if parameter['type'] == 'str':
+        arguments[parameter['name']] = item
+      else:
+        obj = subject.resolve([item]) 
+        if not obj:
+          return say('What ' + item + '?')
+        if parameter['type'] and parameter['type'] != obj.type:
+          return say('The', obj, "can't be used for that.")
+        arguments[parameter['name']] = obj
+
     if (nobjects < len(self.objects) and
         not self.objects[nobjects]['optional']):
       return say(self.verb, 'what', self.objects[nobjects]['name'] + '?')
@@ -234,6 +231,8 @@ class Verb:
       if v['name'] not in arguments and not v['optional']:
         return say(self.verb, p, 'what?')
     getattr(subject, self.verb)(**arguments)
+
+
           
 
 class Entity(Item):
@@ -346,6 +345,14 @@ class Entity(Item):
   Verb('TELL whom speech:str')
   def tell(self, whom, speech):
     whom.onHear(speech, self)
+
+  Verb('TAKO *items FROM vessel?')
+  def take(self, vessel, items):
+    for item in items:
+      if item.move(self):
+        say(str(item), 'taken.')
+
+
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
