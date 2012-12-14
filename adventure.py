@@ -20,9 +20,10 @@ class Vessel:
     items = self.find(q)
     return items[0] if len(items) == 1 else None
 
-  def onTake(self, item): pass
+  def onTake(self, item, source): pass
   def onArrive(self): pass
   def onClose(self): pass
+  def onHear(self, speech, source): say('It seems not to hear.')
 
   
 
@@ -137,6 +138,7 @@ class Item(Vessel):
     return result
     
   def move(self, dest, *message):
+    source = self.location
     if self.fixed and (self.location and dest):
       say('The', self, "can't be moved.")
       return False
@@ -160,7 +162,7 @@ class Item(Vessel):
       say(*message)
     if dest:
       self.onArrive()
-      dest.onTake(self)
+      dest.onTake(self, source)
     return True
 
 
@@ -341,6 +343,9 @@ class Entity(Item):
       vessel.locked = True
       say('You lock the', str(vessel) + '.')
 
+  Verb('TELL whom speech:str')
+  def tell(self, whom, speech):
+    whom.onHear(speech, self)
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
@@ -498,7 +503,7 @@ Item('shovel', 'Dirt road')
 ####################################################
 
 class TarPit(Room):
-  def onTake(self, item):
+  def onTake(self, item, source):
     item.move(None)
     say('The', item, 'sinks into the tar!')
 TarPit('Tar pit',
@@ -513,8 +518,23 @@ Room('Crossroads',
        'south': 'Not sure',
        'east': 'Outside of a small house',
        'west': 'Tar pit' });
-Item('devil', 'Crossroads',
-     "This is the Lord Beelzebub. Satan. Lucifer. You've heard the stories. He's just hanging around here, not really doing too much. Just thinking about stuff.").name = 'Satan'
+class Devil(Entity):
+  def onHear(self, speech, source):
+    say("\"Hello, friend. It's you're good fortune that we meet today. I can see you've had a hard lot in life, been treated unfairly. You've never gotten half the respect you deserve, and never half the material rewards either. The life you've led, you should be a rich man instead of leading the small life those ingrates have alloted. I can mend all that to some small degree. Its not as much as you deserve, perhaps, but for the mere price of a soul, I'll double your lot. There, that's surely worth the pittance I ask, is it not? One worn, tiny soul to make you twice the person you are now?\"")
+  def onTake(self, item, source):
+    if item.type != 'soul':
+      say('"No, that won\'t do."  The devil drops your gift.')
+      item.move(self.location)
+    else:
+      say('"Very well."')
+      item.move(None)
+      for item in source.items:
+        if item.qty:
+          item.qty *= 2
+          say("Your supply of", item.type, "is doubled.")
+Devil('devil', 'Crossroads',
+       "This is the Lord Beelzebub. Satan. Lucifer. You've heard the stories. He's just hanging around here, not really doing too much. Just thinking about stuff.").name = 'Satan'
+Item('soul', 'Crossroads')
 
 ####################################################
 
@@ -536,7 +556,7 @@ Room('Fork in the road',
 ####################################################
 
 class GrassyKnoll(Room):
-  def onTake(self, whom):
+  def onTake(self, whom, source):
     if whom.type == 'You':
       item = whom.items and random.choice(whom.items)
       if item and item.move(ROOMS['Deep grass']):
@@ -606,7 +626,7 @@ Room('Reception',
        'north': 'Hallway',
        'east': 'Supply closet' })
 class Shredder(Furniture):
-  def onTake(self, item):
+  def onTake(self, item, source):
     if item.type == 'parchment' and len(item.writing) > 1:
       item.move(None)
       for shred in item.writing:
