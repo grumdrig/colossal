@@ -100,7 +100,7 @@ class Item(Vessel):
     if self.qty:
       an = str(self.qty) + ' kg of'
     else:
-      an = 'some' if mass else 'an' if self.type[0] in 'aeiou' else 'a'
+      an = 'some' if mass else 'an' if str(self)[0] in 'aeiou' else 'a'
     if brief:
       return an + ' ' + str(self)
     result = self.description or "It's " + an + ' ' + str(self) + '.'
