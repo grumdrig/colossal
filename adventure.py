@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-import sys, random, getopt, textwrap, shlex
+import sys, random, getopt, textwrap, shlex, fileinput
 
 
 ROOMS = { }  # Mapping from room names to rooms
@@ -103,7 +103,9 @@ class Item(Vessel):
       result += ' Written on it are these words:'
       for line in self.writing:
         result += '\n  ' + line
-    if not self.closed and self.items:
+    if self.closed:
+      result += '\nThe ' + self.type + ' is closed.'
+    elif self.items:
       result += '\nThe ' + self.type + ' contains:'
       for item in self.items:
         result += '\n  ' + Cap(item.describe(True)) + '.'
@@ -415,9 +417,9 @@ class Entity(Item):
 
     return True
 
-  def execute(self, file=None):
-    if file:
-      for line in file.readlines():
+  def execute(self, lines=None):
+    if lines:
+      for line in lines:
         say('\n>', line.strip())
         if not self.parse(line):
           break
@@ -450,12 +452,11 @@ osh = Room('Outside of a small house',
              'cheat': 'Cheaterville',
              'in': 'Inside the small house' })
 Item('blank parchment', osh)
-mb = Furniture('mailbox',
-               osh,
-               'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "428" is proudly emblazoned with vinyl stickers on one side.',
-               capacity=2,
-               closed=True)
-Item('letter', mb)
+mailbox = Furniture('mailbox',
+                    osh,
+                    'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "200" is proudly emblazoned with vinyl stickers on one side.',
+                    capacity=2,
+                    closed=True)
 
 ####################################################
 
@@ -603,7 +604,7 @@ Room('Reception',
      "The room's centerpiece is an all-glass desk providing a clear view of the receptionist's knees, were there a receptionist present. Convenient to the desk is a document shredder.\nThe office exit is to the south, a doorway to a small room lies east and a hallway stretches to the north.",
      { 'south': 'North chamber',
        'north': 'Hallway',
-       'east': 'Copier room' })
+       'east': 'Supply closet' })
 class Shredder(Furniture):
   def onTake(self, item):
     if item.type == 'parchment' and len(item.writing) > 1:
@@ -612,6 +613,14 @@ class Shredder(Furniture):
         Item('shredded parchment', self).write(shred)
       say('The', item, 'is shredded into', str(len(item.writing)), 'strips.')
 Shredder('shredder', 'Reception', 'Model 8678b Vellum Shredder. "For When You\'ve Got Something to Hide". (You may have missed it, but that was a pun, just there.)')
+
+#-------------------------------------------------------------
+
+Room('Supply closet',
+     "One too many employees swiped supplies from here and the last binder clip went to someone's home long ago, so the shelves are basically bare.",
+     { 'west': 'Reception' })
+#class FaxMachine(Furniture):
+#  de
 
 #-------------------------------------------------------------
 
@@ -668,13 +677,16 @@ ALIASES = {
 
 def main():
   global VERBOSE
-  opts,args = getopt.getopt(sys.argv[1:], 'vq')
+  opts,args = getopt.getopt(sys.argv[1:], 'vqf:')
   VERBOSE = not args
+  FILENAMES = []
   for o,a in opts:
     if o == '-v':
       VERBOSE = True
     elif o == '-q':
       VERBOSE = False
+    elif o == '-f':
+      FILENAMES.append(a)
 
   say('Welcome to Tarpit Adventure!')
   say()
@@ -682,8 +694,11 @@ def main():
   player = Player('Outside of a small house')
   
   if args:
-    for i in args:
-      player.execute(open(i,'r'))
+    print 'mb', args
+    Item('letter', mailbox).writing = args
+
+  if FILENAMES:
+    player.execute(fileinput.input(FILENAMES))
   else:
     player.execute()
 
