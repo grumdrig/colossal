@@ -253,7 +253,7 @@ class Verb:
         if not arguments[parameter['name']]:
           return say("You can't", self.verb, "what ain't there.")
 
-    getattr(subject, self.verb)(**arguments)
+    return getattr(subject, self.verb)(**arguments)
 
 
           
@@ -389,22 +389,28 @@ class Entity(Item):
     for item in items:
       item.move(vessel, 'You give the', item, 'to the', str(vessel) + '.')
 
+  Verb('XYZZY')
+  def xyzzy(self):
+    say('Nothing happens.')
+
+  Verb('QUIT')
+  def quit(self):
+    say('Goodbye!')
+    return True
+
+
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
     if not words:
-      return True
+      return
 
     command = words.pop(0).lower()
 
     if command in VERBS:
-      VERBS[command].do(self, words)
+      return VERBS[command].do(self, words)
 
     elif command in DIRECTIONS:
-      self.go(command)
-
-    elif command == 'quit':
-      say('Goodbye!')
-      return False
+      return self.go(command)
 
     elif command == 'obey':
       orders = self.find(words)
@@ -414,29 +420,22 @@ class Entity(Item):
         orders = orders[0]
         for line in orders.writing:
           say('>' * (depth+2), line)
-          if not self.parse(line, depth+1):
+          if self.parse(line, depth+1):
             break
-          if orders.location != self:
-            break  # stop if paper gets dropped
-          
-
-    elif command == 'xyzzy':
-      say('Nothing happens.')
 
     else:
       say('I did not understand that.')
 
-    return True
 
   def execute(self, lines=None):
     if lines:
       for line in lines:
         say('\n>', line.strip())
-        if not self.parse(line):
+        if self.parse(line):
           break
     else:
       while True:
-        if not self.parse(raw_input('\n> ')):
+        if self.parse(raw_input('\n> ')):
           break
 
     
