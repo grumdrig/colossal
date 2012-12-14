@@ -141,6 +141,8 @@ class Item(Vessel):
     
   def move(self, dest, *message):
     source = self.location
+    if self.location == dest:
+      return say("It's already there!")
     if self.fixed and (self.location and dest):
       say('The', self, "can't be moved.")
       return False
@@ -297,14 +299,30 @@ class Entity(Item):
     paper.write(text)
     say('You write on the', str(paper) + '.')
 
-  Verb('DIG WITH :shovel')
-  def dig(self, shovel):
-    if 'dig' not in self.location.resources:
-      say("Digging here is fruitless.")
+  Verb('DIG WITH :shovel IN where?')
+  def dig(self, shovel, where):
+    where = where or self.location
+    if hasattr(where, 'resources'):
+      if 'dig' not in where.resources:
+        say("Digging here is fruitless.")
+      else:
+        item = Item(self.location.resources['dig'], None, qty=1.0)
+        if item.move(self):
+          say('You dig up some', item, 'and add it to your inventory.')
     else:
-      item = Item(self.location.resources['dig'], None, qty=1.0)
-      if item.move(self):
-        say('You dig up some', item, 'and add it to your inventory.');
+      dirts = where.find(['dirt'])
+      if not dirts:
+        say("There's nothing worth digging there.")
+      elif dirts[0].qty <= 1:
+        dirts[0].move(self, 'You dig out the', dirts[0],
+                      'and add it to your inventory.')
+      else:
+        item = Item('dirt', None, qty=1.0)
+        if item.move(self):
+          dirts[0].qty -= 1
+          say('You dig out some', item, 'and add it to your inventory.')
+        
+      
 
   Verb('ERASE :parchment')
   def erase(self, parchment):
