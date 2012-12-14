@@ -1,6 +1,5 @@
-look mailbox
 open mailbox
-take letter
+take letter from mailbox
 read letter
 tell letter hello
 e

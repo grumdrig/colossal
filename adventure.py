@@ -14,7 +14,11 @@ class Vessel:
     self.locked = locked
     
   def find(self, q):
-    return [o for o in self.items if o.match(q)]
+    if q and q[0].lower() == 'all':
+      q.pop(0)
+      return [item for item in self.items if not item.fixed]
+    else:
+      return [o for o in self.items if o.match(q)]
 
   def findOne(self, q):
     items = self.find(q)
@@ -120,9 +124,7 @@ class Item(Vessel):
       return q and b and q[0].lower() == b.lower()
     if not q:
       return None
-    if q0('all'):
-      return not self.fixed and self
-    elif q0('it'):
+    if q0('it'):
       q.pop(0)
       return self
     elif q0(self.name):
@@ -208,15 +210,17 @@ class Verb:
       if parameter:
         input.pop(0)
       elif nobjects >= len(self.objects):
-        return say('You lost me at "' + word + '".')
+        return say('You lost me at "' + input[0] + '".')
       else:
         parameter = self.objects[nobjects]
         nobjects += 1
         
-      item = input.pop(0)
-      if parameter['type'] == 'str':
-        arguments[parameter['name']] = item
+      if parameter['multi']:
+        arguments[parameter['name']] = input.pop(0)
+      elif parameter['type'] == 'str':
+        arguments[parameter['name']] = input.pop(0)
       else:
+        item = input.pop(0)
         obj = subject.resolve([item]) 
         if not obj:
           return say('What ' + item + '?')
@@ -228,8 +232,26 @@ class Verb:
         not self.objects[nobjects]['optional']):
       return say(self.verb, 'what', self.objects[nobjects]['name'] + '?')
     for p,v in self.pps.items():
-      if v['name'] not in arguments and not v['optional']:
-        return say(self.verb, p, 'what?')
+      if v['name'] not in arguments:
+        if not v['optional']:
+          return say(self.verb, p, 'what?')
+        else:
+          arguments[v['name']] = None
+
+    for parameter in self.pps.values() + self.objects:
+      if (parameter['multi'] and
+          parameter['type'] != 'str' and
+          arguments[parameter['name']]):
+        location = subject.location if 'from' in self.pps else subject
+        if 'in' in self.pps:
+          location = arguments[self.pps['in']['name']] or location
+        if 'from' in self.pps:
+          location = arguments[self.pps['from']['name']] or location
+        arguments[parameter['name']] = \
+                                   location.find([arguments[parameter['name']]])
+        if not arguments[parameter['name']]:
+          return say("I can't take what ain't there.")
+
     getattr(subject, self.verb)(**arguments)
 
 
@@ -346,7 +368,7 @@ class Entity(Item):
   def tell(self, whom, speech):
     whom.onHear(speech, self)
 
-  Verb('TAKO *items FROM vessel?')
+  Verb('TAKE *items FROM vessel?')
   def take(self, vessel, items):
     for item in items:
       if item.move(self):
@@ -721,7 +743,6 @@ def main():
   player = Player('Outside of a small house')
   
   if args:
-    print 'mb', args
     Item('letter', mailbox).writing = args
 
   if FILENAMES:
