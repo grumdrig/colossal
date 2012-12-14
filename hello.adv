@@ -1,19 +1,9 @@
-e 
-e 
-ne 
-e
-in
-n
-n
-e
-e
-l it
-take bag from cauldron
-l bag
-drop it
-take bag from cauldron
-l bag
-drop it
-take bag from cauldron
-l bag
-drop it
+take all
+put all in mailbox
+open mailbox
+put it in mailbox
+take it from mailbox
+give it to mailbox
+give all to mailbox
+i
+l mailbox

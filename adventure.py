@@ -149,6 +149,9 @@ class Item(Vessel):
     if dest and (dest.capacity <= 0):
       say('Not a container!')
       return False
+    if dest and dest.closed and source:
+      say('The', dest, 'is closed.')
+      return False
     if dest and self.qty and self.type in [i.type for i in dest.items]:
       others = [i for i in dest.items if i.type == self.type]
       others[0].qty += self.qty
@@ -243,14 +246,12 @@ class Verb:
           parameter['type'] != 'str' and
           arguments[parameter['name']]):
         location = subject.location if 'from' in self.pps else subject
-        if 'in' in self.pps:
-          location = arguments[self.pps['in']['name']] or location
         if 'from' in self.pps:
           location = arguments[self.pps['from']['name']] or location
         arguments[parameter['name']] = \
-                                   location.find([arguments[parameter['name']]])
+                                location.find([arguments[parameter['name']]])
         if not arguments[parameter['name']]:
-          return say("I can't take what ain't there.")
+          return say("You can't", self.verb, "what ain't there.")
 
     getattr(subject, self.verb)(**arguments)
 
@@ -301,7 +302,7 @@ class Entity(Item):
     if 'dig' not in self.location.resources:
       say("Digging here is fruitless.")
     else:
-      item = Item(self.location.resources['dig'], None, qty=1)
+      item = Item(self.location.resources['dig'], None, qty=1.0)
       if item.move(self):
         say('You dig up some', item, 'and add it to your inventory.');
 
@@ -371,10 +372,22 @@ class Entity(Item):
   Verb('TAKE *items FROM vessel?')
   def take(self, vessel, items):
     for item in items:
-      if item.move(self):
-        say(str(item), 'taken.')
+      item.move(self, str(item) + ' taken.')
 
+  Verb('DROP *items')
+  def drop(self, items):
+    for item in items:
+      item.move(self.location, str(item) + ' dropped.')
 
+  Verb('PUT *items IN vessel')
+  def put(self, items, vessel):
+    for item in items:
+      item.move(vessel, 'You put the', item, 'in the', str(vessel) + '.')
+
+  Verb('GIVE *items TO vessel')
+  def give(self, items, vessel):
+    for item in items:
+      item.move(vessel, 'You give the', item, 'to the', str(vessel) + '.')
 
   def parse(self, line, depth=0):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
@@ -392,42 +405,6 @@ class Entity(Item):
     elif command == 'quit':
       say('Goodbye!')
       return False
-
-    elif command == 'take':
-      items = self.location.find(words)
-      for furn in self.location.items:
-        if not items and not furn.closed:
-          items = furn.find(words)
-      if not items:
-        say("I can't take what ain't there.")
-      else:
-        for item in items:
-          if item.move(self):
-            say(str(item), 'taken.')
-
-    elif command == 'drop':
-      items = self.find(words)
-      if not items:
-        say("You can't drop what you ain't got.")
-      else:
-        for item in items:
-          item.move(self.location, str(item), 'dropped.')
-
-    elif command == 'put' and len(words) >= 3 and words[1] == 'in':
-      items = self.find(words)
-      if not items:
-        say("You can't put what you ain't got.")
-      elif words.pop(0) != 'in':
-        say("I did not understand that.")
-      else:
-        dest = self.location.findOne(words)
-        if not dest:
-          say("Where?")
-        elif dest.closed:
-          say("The " + str(dest) + " is closed.")
-        else:
-          for item in items:
-            item.move(dest, 'You put the', item, 'in the', str(dest) + '.')
 
     elif command == 'obey':
       orders = self.find(words)
@@ -489,7 +466,7 @@ Item('blank parchment', osh)
 mailbox = Furniture('mailbox',
                     osh,
                     'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "200" is proudly emblazoned with vinyl stickers on one side.',
-                    capacity=2,
+                    capacity=3,
                     closed=True)
 
 ####################################################
@@ -758,9 +735,8 @@ def main():
       try:
         q = float(arg)
         Item('dirt', bag).qty = q
-        print 'Q', q
       except ValueError:
-        print Item('pebble', bag)
+        Item('pebble', bag)
         
 
   if FILENAMES:
