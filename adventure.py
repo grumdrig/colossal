@@ -642,6 +642,14 @@ Entity('robot', 'Chamber',
 
 ####################################################
 
+Room('East chamber',
+     "A single shaft of daylight penetrates the gloom, shining from a small hole in the middle of the high ceiling of this subterranean chamber. A large cauldron stands directly beneath the hole.",
+     { 'west': 'Chamber' })
+cauldron = Furniture('blackened cauldron', 'East chamber',
+                     "The cauldron is coated with sooty blackness.")
+
+####################################################
+
 Room('North chamber',
      "The rough, natural passage entering this chamber from the south, not to mention the craggy subterranean setting in general, contrast sharply with the professional glass and steel facade to the north. The design work is modern and impeccable. Lettered over the door in 900pt Helvetica are the words:\n  Calloway, Papermaster, Turban and Hoyt LLC\n               Attorneys at Law",
      { 'south': 'Chamber',
@@ -744,6 +752,16 @@ def main():
   
   if args:
     Item('letter', mailbox).writing = args
+    for arg in args:
+      bag = Item('bag', cauldron, capacity=float('inf'))
+      bag.adjective = random.choice(ADJECTIVES)
+      try:
+        q = float(arg)
+        Item('dirt', bag).qty = q
+        print 'Q', q
+      except ValueError:
+        print Item('pebble', bag)
+        
 
   if FILENAMES:
     player.execute(fileinput.input(FILENAMES))
