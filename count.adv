@@ -13,19 +13,22 @@ take it from cauldron
 think "inventory is now parchment, shovel, pen, bag of dirt"
 drop parchment
 take parchment
-i 
 w
 n
 n
 e
-l scale
 write on parchment with pen "dig in bag with shovel"
 write on parchment with pen "put last in scale"
 write on parchment with pen "push button"
 write on parchment with pen "obey parchment"
-l parchment
 obey parchment
-take button from scale
+
+think "we end up with one too many. klude around it."
+take last from scale
+w
+drop label
+e
+
 take dirt from scale
 take parchment from scale
 erase parchment
@@ -40,5 +43,3 @@ write on parchment with pen "drop last"
 write on parchment with pen "take label"
 write on parchment with pen "obey parchment"
 obey parchment
-l scale
-read label
