@@ -17,6 +17,9 @@ w
 n
 n
 e
+think "add more and more dirt to scale, weighing it each time"
+think "when no more dirt is available, the parchment gets put"
+think "into the scale and the recursion stops"
 write on parchment with pen "dig in bag with shovel"
 write on parchment with pen "put last in scale"
 write on parchment with pen "push button"
@@ -29,6 +32,7 @@ w
 drop label
 e
 
+think "now take each label to the trophy case and output the number"
 take dirt from scale
 take parchment from scale
 erase parchment

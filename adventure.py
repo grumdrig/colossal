@@ -711,7 +711,9 @@ mailroom = Room('Supply closet',
                 { 'west': 'Reception' })
 class Scale(Furniture):
   def onTake(self, item, source):
-    self.writing = [str(self.weight())]
+    wt = str(self.weight())
+    if wt[-2:] == '.0': wt = wt[:-2]  # remove .0 if integral
+    self.writing = [wt]
 scale = Scale('postal scale', mailroom,
               'The postal scale features a digital readout and a bold red button.')
 class ScaleButton(Furniture):
