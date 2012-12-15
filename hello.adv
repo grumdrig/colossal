@@ -1,4 +1,1 @@
-take self
-take here
-put self in here
-put self in mailbox
+in

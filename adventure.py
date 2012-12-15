@@ -103,7 +103,7 @@ class Room(Vessel):
     if not brief:
       result += '\n\n' + self.description
       for item in self.items:
-        if item.type != 'You':
+        if item.type != 'You' and not item.fixed:
           result += '\n\nThere is ' + item.describe(True) + ' here.'
     return result
           
@@ -510,10 +510,10 @@ class Player(Entity):
 
 
 
-####################################################
+#=============================================================================#
 
 osh = Room('Outside of a small house',
-           'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\nYou stand on a poor road running east-west, outside of a small house painted white.',
+           'The day is warm and sunny. Butterflies careen about and bees hum from blossom to blossom. The smell of peonies and adventure fills the air.\n\nYou stand on a poor road running east-west, outside of a small house painted white. Planted in the ground in front of the house is a mailbox.',
            { 'east': 'Dirt road',
              'west': 'Crossroads',
              'cheat': 'Cheaterville',
@@ -525,7 +525,7 @@ mailbox = Furniture('mailbox',
                     capacity=3,
                     closed=True)
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 cv = Room('Cheaterville',
           'Nothing to see here. Move along.',
@@ -533,10 +533,10 @@ cv = Room('Cheaterville',
 Item('parchment', cv).name = 'pp'
 Item('pen', cv).name = 'pn'
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Inside the small house',
-     'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated.',
+     'The house is decorated in an oppressively cozy country style. There are needlepoints on every wall and pillow, and the furniture is overstuffed and outdated. Against one overdecorated wall stands a case designed to display little league trophies and the like.',
      { 'out': 'Outside of a small house' })
 class TrophyCase(Furniture):
   def onClose(self):
@@ -548,12 +548,12 @@ class TrophyCase(Furniture):
         item.move(None)
 TrophyCase('trophy case',
            'Inside the small house',
-           'Against one overdecorated wall there is a trophy case. This handsome case offers display space for a few treasured items.',
+           'This handsome case offers display space for a few treasured items.',
            capacity=3,
            closed=True,
            locked=True);
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Dirt road',
      "You stand on a dirt road running east-west. The road is dirt. It's quite dirty. Beside the road is also dirt; there's dirt everywhere, in fact. Piles and piles of dirt, all around you!",
@@ -562,7 +562,7 @@ Room('Dirt road',
      resources={ 'dig': 'dirt' })
 Item('shovel', 'Dirt road')
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 class TarPit(Room):
   def onTake(self, item, source):
@@ -572,7 +572,7 @@ TarPit('Tar pit',
        'The road leads to a noxious pit of tar. It emits noxious fumes and bubbles langoriously from time to time. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
        { 'east': 'Outside of a small house' });
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Crossroads',
      'You stand at a crossroads. Also, there are roads leading in all the cardinal directions.',
@@ -598,7 +598,7 @@ Devil('devil', 'Crossroads',
        "This is the Lord Beelzebub. Satan. Lucifer. You've heard the stories. He's just hanging around here, not really doing too much. Just thinking about stuff.").name = 'Satan'
 Item('soul', 'Crossroads')
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Dunno...',
      "I'm not sure what we're looking at here. I just don't know how to describe it. It's just...\nThe road continues north-south. Other than that it's just really indescribable. (Sorry.)",
@@ -607,7 +607,7 @@ Room('Dunno...',
 Item('something', 'Dunno...',
      'What the hell is this thing?')
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Fork in the road',
      'The road leading in from the west forks here. The northeast fork seems to head towards a rocky, hilly area. The road to the southeast is narrower and lined with tall grass. Not much more to say about it than that. Should I mention the bees and butterflies again?',
@@ -615,7 +615,7 @@ Room('Fork in the road',
        'northeast': 'Mouth of a cave',
        'southeast': 'Grassy knoll', })
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 class GrassyKnoll(Room):
   def onTake(self, whom, source):
@@ -630,13 +630,13 @@ Item('gnoll',
      'Grassy knoll',
      'Bograt is a greasy gnoll who lives on a grassy knoll. No two ways about it: he is a jerk.').name = 'Bograt'
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Deep grass',
      "The grass here is deep. It's like a needle in a haystack, minus the needle in here.",
      { 'out': 'Grassy knoll' })
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Mouth of a cave',
      "The jaws of a cave yawn before you. To continue the metaphor, the cave's acrid breath recalls overcooked garlic bread. Sharp teeth (and here I'm hinting at stactites and stalagmites) gnash (poetically speaking) at the lips of the cave. I think that's descriptive enough.",
@@ -644,7 +644,7 @@ Room('Mouth of a cave',
        'north': 'Cave foyer',
        'in': 'Cave foyer' })
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Cave foyer',
      "Immediately inside the entrance to the cave, it opens up to a vaulted entryway. The skeletal remains and equipment of what must be the world's absolute worst spelunker slump against one wall. Deeper into the cave, a low passage winds north.",
@@ -655,14 +655,14 @@ pack = Item('backpack', 'Cave foyer', capacity=6)
 Item('pen', pack)
 Item('journal page', pack).write('August 13;;Down to my last stick of gum. I should have brought more food and less gum.;;The exit from this cave must be somewhere around here, but I lack the strength to keep looking.;;...')
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Narrow passage',
      "The passage soon becomes so low you have to belly crawl to get anywhere. It's also dark, very dark. The walls press your sides, unyielding cold stone. Despite the chill, sweat beads your brow. There is scuffling sound behind you. A footstep? No, no. You feel like you're suffocating. Is that a dim glow up ahead? Please let it be so...",
      { 'south': 'Cave foyer',
        'north': 'Chamber' });
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Chamber',
      "Small fissures in the ceiling allow a bit of daylight to filter into this fairly roomy chamber. Passages extend in all four directions.",
@@ -673,7 +673,7 @@ Room('Chamber',
 Entity('robot', 'Chamber',
        "Picure Bender from Futurama, without the drinking problem. That's pretty much this robot. Not that he's without his problems though; his problem is overenthusiasm.").name = 'Floyd'
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('East chamber',
      "A single shaft of daylight penetrates the gloom, shining from a small hole in the middle of the high ceiling of this subterranean chamber. A large cauldron stands directly beneath the hole.",
@@ -681,14 +681,14 @@ Room('East chamber',
 cauldron = Furniture('blackened cauldron', 'East chamber',
                      "The cauldron is coated with sooty blackness.")
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('North chamber',
      "The rough, natural passage entering this chamber from the south, not to mention the craggy subterranean setting in general, contrast sharply with the professional glass and steel facade to the north. The design work is modern and impeccable. Lettered over the door in 900pt Helvetica are the words:\n  Calloway, Papermaster, Turban and Hoyt LLC\n               Attorneys at Law",
      { 'south': 'Chamber',
        'north': 'Reception' })
 
-####################################################
+#-----------------------------------------------------------------------------#
 
 Room('Reception',
      "The room's centerpiece is an all-glass desk providing a clear view of the receptionist's knees, were there a receptionist present. Convenient to the desk is a document shredder.\nThe office exit is to the south, a doorway to a small room lies east and a hallway stretches to the north.",
@@ -704,10 +704,10 @@ class Shredder(Furniture):
       say('The', item, 'is shredded into', str(len(item.writing)), 'strips.')
 Shredder('shredder', 'Reception', 'Model 8678b Vellum Shredder. "For When You\'ve Got Something to Hide". (You may have missed it, but that was a pun, just there.)')
 
-#-------------------------------------------------------------
+#-----------------------------------------------------------------------------#
 
 mailroom = Room('Supply closet',
-                "One too many employees swiped supplies from here and the last binder clip went to someone's home long ago, so the shelves are basically bare.",
+                "One too many employees swiped supplies from here and the last binder clip went to someone's home long ago, so the shelves are basically bare. On one shelf, there is a postal scale.",
                 { 'west': 'Reception' })
 class Scale(Furniture):
   def onTake(self, item, source):
@@ -718,14 +718,13 @@ scale = Scale('postal scale', mailroom,
               'The postal scale features a digital readout and a bold red button.')
 class ScaleButton(Furniture):
   def onPush(self):
-    label = Item('metering label', self.location)
-    label.write('\n'.join(self.location.writing))
+    label = Item('metering label', scale)
+    label.write('\n'.join(scale.writing))
     say("Skrzzzzzzztkrrrrrzt... ", Cap(label.describe(True)), 'emerges.')
-ScaleButton('red button', scale, "It's an inviting red button ergonomically positioned on the postal scale.")
-    
-    
+ScaleButton('red button', mailroom, "It's an inviting red button ergonomically positioned on the postal scale.")
 
-#-------------------------------------------------------------
+#=============================================================================#
+
 
 
      
@@ -784,7 +783,7 @@ ALIASES = {
 def main():
   global VERBOSE
   opts,args = getopt.getopt(sys.argv[1:], 'vqf:')
-  VERBOSE = not args
+  VERBOSE = None
   FILENAMES = []
   for o,a in opts:
     if o == '-v':
@@ -793,6 +792,7 @@ def main():
       VERBOSE = False
     elif o == '-f':
       FILENAMES.append(a)
+  if VERBOSE == None: VERBOSE = not FILENAMES
 
   say('Welcome to Tarpit Adventure!')
   say()

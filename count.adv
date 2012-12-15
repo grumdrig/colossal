@@ -1,5 +1,5 @@
 think "This counts from one to the numerical first command line argument"
-take all
+take parchment
 e
 take shovel
 e
@@ -26,7 +26,7 @@ write on parchment with pen "push button"
 write on parchment with pen "obey parchment"
 obey parchment
 
-think "we end up with one too many. klude around it."
+think "we end up with one too many. kludge around it."
 take last from scale
 w
 drop label
