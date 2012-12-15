@@ -1,17 +1,2 @@
-e
-take all
-dig with shovel
-i
-dig with shovel in self
-i
-e
-ne
-n
-n
-n
-e
-take all from cauldron
-dig in bag with shovel
-i
-l bag
+take self
 

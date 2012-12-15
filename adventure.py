@@ -14,9 +14,11 @@ class Vessel:
     self.locked = locked
     
   def find(self, q):
-    if q and q[0].lower() == 'all':
+    if not q:
+      return []
+    elif q[0].lower() == 'all':
       q.pop(0)
-      return [item for item in self.items if not item.fixed]
+      return [item for item in self.items if not (item.fixed or item.mobile)]
     else:
       return [o for o in self.items if o.match(q)]
 
@@ -84,6 +86,7 @@ class Item(Vessel):
     self.name = None
     self.location = None
     self.fixed = False
+    self.mobile = False
     self.writing = []
     self.description = description
     self.qty = qty
@@ -140,11 +143,19 @@ class Item(Vessel):
     return result
     
   def move(self, dest, *message):
+    container = dest
+    while container:
+      if container == self:
+        return say("That's...impossible.")
+      container = hasattr(container, 'location') and container.location
     source = self.location
     if self.location == dest:
       return say("It's already there!")
     if self.fixed and (self.location and dest):
       say('The', self, "can't be moved.")
+      return False
+    if self.mobile and (self.location and dest):
+      say('The', self, "doesn't care to be moved about.")
       return False
     if isinstance(dest, str):
       dest = ROOMS[dest]
@@ -244,14 +255,19 @@ class Verb:
           arguments[v['name']] = None
 
     for parameter in self.pps.values() + self.objects:
+      arg = arguments[parameter['name']]
       if (parameter['multi'] and
           parameter['type'] != 'str' and
-          arguments[parameter['name']]):
+          arg):
         location = subject.location if 'from' in self.pps else subject
         if 'from' in self.pps:
           location = arguments[self.pps['from']['name']] or location
-        arguments[parameter['name']] = \
-                                location.find([arguments[parameter['name']]])
+        if arg == 'self':
+          arguments[parameter['name']] = [subject]
+        elif arg == 'here':
+          arguments[parameter['name']] = [subject.location]
+        else:
+          arguments[parameter['name']] = location.find([arg])
         if not arguments[parameter['name']]:
           return say("You can't", self.verb, "what ain't there.")
 
@@ -263,7 +279,7 @@ class Verb:
 class Entity(Item):
   def __init__(self, type, location, description):
     Item.__init__(self, type, location, description, capacity=9)
-    self.fixed = True
+    self.mobile = True
 
   def resolve(self, q):
     if not q: return None
