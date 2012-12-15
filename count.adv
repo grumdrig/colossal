@@ -1,0 +1,44 @@
+think "This counts from one to the numerical first command line argument"
+take all
+e
+take shovel
+e
+ne
+n
+take pen from backpack
+n
+n
+e
+take it from cauldron
+think "inventory is now parchment, shovel, pen, bag of dirt"
+drop parchment
+take parchment
+i 
+w
+n
+n
+e
+l scale
+write on parchment with pen "dig in bag with shovel"
+write on parchment with pen "put last in scale"
+write on parchment with pen "push button"
+write on parchment with pen "obey parchment"
+l parchment
+obey parchment
+take button from scale
+take dirt from scale
+take parchment from scale
+erase parchment
+write on parchment with pen "take first from scale"
+write on parchment with pen "w;s;s;s;s;out;sw;w;w;in"
+write on parchment with pen "unlock case;open case"
+write on parchment with pen "put label in case"
+write on parchment with pen "close case"
+write on parchment with pen "out;e;e;ne;n;n;n;n;n;e"
+write on parchment with pen "take first from scale"
+write on parchment with pen "drop last"
+write on parchment with pen "take label"
+write on parchment with pen "obey parchment"
+obey parchment
+l scale
+read label

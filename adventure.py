@@ -19,7 +19,13 @@ class Vessel:
       return []
     elif q[0].lower() == 'all':
       q.pop(0)
-      return [item for item in self.items if not (item.fixed or item.mobile)]
+      return [i for i in self.items if not (i.fixed or i.mobile)]
+    elif q[0].lower() == 'first':
+      q.pop(0)
+      return [i for i in self.items if not (i.fixed or i.mobile)][:1]
+    elif q[0].lower() == 'last':
+      q.pop(0)
+      return [i for i in self.items if not (i.fixed or i.mobile)][-1:]
     else:
       return [o for o in self.items if o.match(q)]
 
@@ -72,6 +78,7 @@ class Vessel:
   def onArrive(self): pass
   def onClose(self): pass
   def onHear(self, speech, source): say('It seems not to hear.')
+  def onPush(self): say("That doesn't appear to do anything.")
 
   
 
@@ -182,7 +189,10 @@ class Item(Vessel):
       result = self
       q.pop(0)
     return result
-    
+
+  def weight(self):
+    return (self.qty or 0) + sum([i.weight() for i in self.items])
+  
 
 class Furniture(Item):
   def __init__(self, type, location, description=None,
@@ -280,6 +290,7 @@ class Entity(Item):
   def __init__(self, type, location, description):
     Item.__init__(self, type, location, description, capacity=9)
     self.mobile = True
+    self.active = True
 
   def resolve(self, q):
     if not q: return None
@@ -290,6 +301,9 @@ class Entity(Item):
       return self.location
     else:
       items = self.find([item]) or self.location.find([item])
+      if not items:
+        items = sum([i.find([item])
+                     for i in self.items + self.location.items], [])
       return items and items[0] or None
 
   Verb('INVENTORY')
@@ -430,7 +444,15 @@ class Entity(Item):
   Verb('QUIT')
   def quit(self):
     say('Goodbye!')
-    return True
+    self.active = False
+
+  Verb('THINK concept:str')
+  def think(self, concept):
+    pass
+
+  Verb('PUSH item')
+  def push(self, item):
+    item.onPush()
 
 
   def parse(self, line, depth=0):
@@ -452,10 +474,12 @@ class Entity(Item):
         say('Obey what, exactly?')
       else:
         orders = orders[0]
+        self.active = True
         for line in orders.writing:
-          say('>' * (depth+2), line)
-          if self.parse(line, depth+1):
+          if not self.active:
             break
+          say('>' * (depth+2), line)
+          self.parse(line, depth+1)
 
     else:
       say('I did not understand that.')
@@ -464,14 +488,13 @@ class Entity(Item):
   def execute(self, lines=None):
     if lines:
       for line in lines:
+        if not self.active:
+          break
         say('\n>', line.strip())
-        if self.parse(line):
-          break
+        self.parse(line)
     else:
-      while True:
-        if self.parse(raw_input('\n> ')):
-          break
-
+      while self.active:
+        self.parse(raw_input('\n> '))
     
 
 class Player(Entity):
@@ -683,11 +706,22 @@ Shredder('shredder', 'Reception', 'Model 8678b Vellum Shredder. "For When You\'v
 
 #-------------------------------------------------------------
 
-Room('Supply closet',
-     "One too many employees swiped supplies from here and the last binder clip went to someone's home long ago, so the shelves are basically bare.",
-     { 'west': 'Reception' })
-#class FaxMachine(Furniture):
-#  de
+mailroom = Room('Supply closet',
+                "One too many employees swiped supplies from here and the last binder clip went to someone's home long ago, so the shelves are basically bare.",
+                { 'west': 'Reception' })
+class Scale(Furniture):
+  def onTake(self, item, source):
+    self.writing = [str(self.weight())]
+scale = Scale('postal scale', mailroom,
+              'The postal scale features a digital readout and a bold red button.')
+class ScaleButton(Furniture):
+  def onPush(self):
+    label = Item('metering label', self.location)
+    label.write('\n'.join(self.location.writing))
+    say("Skrzzzzzzztkrrrrrzt... ", Cap(label.describe(True)), 'emerges.')
+ScaleButton('red button', scale, "It's an inviting red button ergonomically positioned on the postal scale.")
+    
+    
 
 #-------------------------------------------------------------
 
@@ -739,6 +773,9 @@ ALIASES = {
   'execute': 'obey',
   'perform': 'obey',
   'interpret': 'obey',
+  'wonder': 'think',
+  'muse': 'think',
+  'believe': 'think',
 }
 
 
