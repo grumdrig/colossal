@@ -706,6 +706,30 @@ Shredder('shredder', 'Reception', 'Model 8678b Vellum Shredder. "For When You\'v
 
 #-----------------------------------------------------------------------------#
 
+Room('Hallway',
+     "The hallway runs north-south. The walls are decorated with motivational posters and inexpertly-executed watercolors. There are doors on either side.",
+     { 'south': 'Reception',
+       'north': 'More hallway',
+       'east': 'Bathroom',
+       'west': 'Executive office' })
+
+#-----------------------------------------------------------------------------#
+
+Room('Bathroom',
+     "The bathroom is equipped with the usual fixtures. In the floor, there is a large drain.",
+     { 'west': 'Hallway',
+       'out': 'Hallway' })
+class StandardOut(Furniture):
+  def onTake(self, item, source):
+    for item in self.items:
+      output(item.writing)
+      say('The', item, 'vanishes into the drain.')
+      item.move(None)
+StandardOut('drain pipe', 'Bathroom',
+            "The drain sits at the low point of the tiled floor. It is emblazoned with the words \"STANDARD PIPE CO.\".")
+
+#-----------------------------------------------------------------------------#
+
 mailroom = Room('Supply closet',
                 "One too many employees swiped supplies from here and the last binder clip went to someone's home long ago, so the shelves are basically bare. On one shelf, there is a postal scale.",
                 { 'west': 'Reception' })

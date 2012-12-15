@@ -37,11 +37,9 @@ take dirt from scale
 take parchment from scale
 erase parchment
 write on parchment with pen "take first from scale"
-write on parchment with pen "w;s;s;s;s;out;sw;w;w;in"
-write on parchment with pen "unlock case;open case"
-write on parchment with pen "put label in case"
-write on parchment with pen "close case"
-write on parchment with pen "out;e;e;ne;n;n;n;n;n;e"
+write on parchment with pen "w;n;e"
+write on parchment with pen "put label in pipe"
+write on parchment with pen "w;s;e"
 write on parchment with pen "take first from scale"
 write on parchment with pen "drop last"
 write on parchment with pen "take label"
