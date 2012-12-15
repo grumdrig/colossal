@@ -12,6 +12,7 @@ class Vessel:
     self.capacity = capacity or 0
     self.closed = closed
     self.locked = locked
+    self.location = None
     
   def find(self, q):
     if not q:
@@ -25,6 +26,47 @@ class Vessel:
   def findOne(self, q):
     items = self.find(q)
     return items[0] if len(items) == 1 else None
+
+  def move(self, dest, *message):
+    container = dest
+    while container:
+      if container == self:
+        return say("That's...impossible.")
+      container = hasattr(container, 'location') and container.location
+    source = self.location
+    if self.location == dest:
+      return say("It's already there!")
+    if self.fixed and (self.location and dest):
+      say('The', self, "can't be moved.")
+      return False
+    if self.mobile and (self.location and dest):
+      say('The', self, "doesn't care to be moved about.")
+      return False
+    if isinstance(dest, str):
+      dest = ROOMS[dest]
+    if dest and (dest.capacity <= 0):
+      say('Not a container!')
+      return False
+    if dest and dest.closed and source:
+      say('The', dest, 'is closed.')
+      return False
+    if dest and self.qty and self.type in [i.type for i in dest.items]:
+      others = [i for i in dest.items if i.type == self.type]
+      others[0].qty += self.qty
+    elif dest:
+      if len(dest.items) >= dest.capacity:
+        say('No more room!')
+        return False
+      dest.items.append(self)
+    if self.location:
+      self.location.items.remove(self)
+    self.location = dest
+    if message:
+      say(*message)
+    if dest:
+      self.onArrive()
+      dest.onTake(self, source)
+    return True
 
   def onTake(self, item, source): pass
   def onArrive(self): pass
@@ -84,7 +126,6 @@ class Item(Vessel):
       self.type = type
       self.adjective = None
     self.name = None
-    self.location = None
     self.fixed = False
     self.mobile = False
     self.writing = []
@@ -142,47 +183,6 @@ class Item(Vessel):
       q.pop(0)
     return result
     
-  def move(self, dest, *message):
-    container = dest
-    while container:
-      if container == self:
-        return say("That's...impossible.")
-      container = hasattr(container, 'location') and container.location
-    source = self.location
-    if self.location == dest:
-      return say("It's already there!")
-    if self.fixed and (self.location and dest):
-      say('The', self, "can't be moved.")
-      return False
-    if self.mobile and (self.location and dest):
-      say('The', self, "doesn't care to be moved about.")
-      return False
-    if isinstance(dest, str):
-      dest = ROOMS[dest]
-    if dest and (dest.capacity <= 0):
-      say('Not a container!')
-      return False
-    if dest and dest.closed and source:
-      say('The', dest, 'is closed.')
-      return False
-    if dest and self.qty and self.type in [i.type for i in dest.items]:
-      others = [i for i in dest.items if i.type == self.type]
-      others[0].qty += self.qty
-    elif dest:
-      if len(dest.items) >= dest.capacity:
-        say('No more room!')
-        return False
-      dest.items.append(self)
-    if self.location:
-      self.location.items.remove(self)
-    self.location = dest
-    if message:
-      say(*message)
-    if dest:
-      self.onArrive()
-      dest.onTake(self, source)
-    return True
-
 
 class Furniture(Item):
   def __init__(self, type, location, description=None,
