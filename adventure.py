@@ -265,10 +265,10 @@ class Verb:
           arguments[v['name']] = None
 
     for parameter in self.pps.values() + self.objects:
-      arg = arguments[parameter['name']]
       if (parameter['multi'] and
           parameter['type'] != 'str' and
-          arg):
+          arguments[parameter['name']]):
+        arg = arguments[parameter['name']]
         location = subject.location if 'from' in self.pps else subject
         if 'from' in self.pps:
           location = arguments[self.pps['from']['name']] or location
@@ -570,7 +570,7 @@ class TarPit(Room):
     say('The', item, 'sinks into the tar!')
 TarPit('Tar pit',
        'The road leads to a noxious pit of tar. It emits noxious fumes and bubbles langoriously from time to time. Amidst the tar, out of reach, a tar-encrusted T-rex bobs, half-submerged.',
-       { 'east': 'Outside of a small house' });
+       { 'east': 'Crossroads' });
 
 #-----------------------------------------------------------------------------#
 
@@ -676,10 +676,35 @@ Entity('robot', 'Chamber',
 #-----------------------------------------------------------------------------#
 
 Room('East chamber',
-     "A single shaft of daylight penetrates the gloom, shining from a small hole in the middle of the high ceiling of this subterranean chamber. A large cauldron stands directly beneath the hole.",
-     { 'west': 'Chamber' })
+     "A single shaft of daylight penetrates the gloom, shining from a small hole in the middle of the high ceiling of this subterranean chamber. A large cauldron stands directly beneath the hole. There are openings to the west and southeast.",
+     { 'west': 'Chamber',
+       'southeast': 'Balance room' })
 cauldron = Furniture('blackened cauldron', 'East chamber',
                      "The cauldron is coated with sooty blackness.")
+
+#-----------------------------------------------------------------------------#
+
+Room('Balance room',
+     "Just another underground place with a little bit of headspace. Upon a stone dias in the middle of the room is a classical marble statue of a blindfolded woman. From her outstretched right hand dangles a golden balance scale. Her left arm is bent at the elbow and her middle finger is held upright, forever fixed in some ancient gesture whose meaning is now long lost.\nThe only exit is to the northwest.",
+     { 'northwest': 'East chamber' })
+class Balance(Furniture):
+  def onTake(self, item, source):
+    if len(self.items) == 2:
+      w1,w2 = [item.weight() for item in self.items]
+      if w2 > w1:
+        self.items.reverse()
+      if w1 == w2:
+        say('The scale stays in balance.')
+      else:
+        say('The side of the scale holding the', self.items[0],
+            'swings to the ground, and the', self.items[0],
+            'tumbles off. Then the other side lowers to the ground and the',
+            self.items[1], 'falls off.')
+        while self.items:
+          self.items[0].move(self.location)
+Balance('balance scale', 'Balance room',
+        "This ornate golden scale appears to be fully functional.",
+        capacity=2)
 
 #-----------------------------------------------------------------------------#
 

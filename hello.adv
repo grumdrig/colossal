@@ -1,1 +1,14 @@
-in
+e
+take shovel
+e 
+ne
+n
+n
+n
+e
+take bag from cauldron
+se
+l bag
+put shovel in balance
+put bag in balance
+l
