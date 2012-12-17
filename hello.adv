@@ -11,4 +11,4 @@ se
 l bag
 put shovel in balance
 put bag in balance
-l
+take last from balance
