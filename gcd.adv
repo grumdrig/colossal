@@ -1,0 +1,85 @@
+think "Greatest common divisor"
+e
+take shovel
+e 
+ne
+n
+n
+n
+e
+take bag from cauldron
+take bag from cauldron
+se
+put last into balance
+put bag into balance
+l balance
+call first in balance A
+call last from balance B
+l balance
+l A
+l B
+dig in A with shovel
+dig in A with shovel
+dig in A with shovel
+dig in A with shovel
+l A
+l B
+l scale
+quit
+obey Divide
+
+cheat bag
+call last T
+cheat parchment
+call last X
+write on X with pen "put A on balance"
+write on X with pen ""
+write on X with pen ""
+write on X with pen ""
+write on X with pen ""
+write on X with pen ""
+write on X with pen ""
+write on X with pen ""
+
+10:
+
+until A is lighter than B:
+  empty the B bag into bag T until its empty. for each shovelful, take
+  a shovelful out of A
+
+Procedure X:
+  If bag A is empty, the answer is in B
+  Otherwise, dirt from A -> B, dirt from T -> A, GOTO 10
+
+
+bag H:
+  0.5 kg dirt
+  
+
+Procedure Y:
+  
+  dig with shovel from B
+  put dirt in T
+  dig with shovel from A
+  drop dirt
+
+  if B is empty:
+    do Procedure X
+  else:
+    do Y
+
+do that last test by having a 1/2 kg bag of dirt with procedure X
+put procedure Y in bag B
+
+
+
+
+a > b
+repeat:
+  divide a by b
+  if remainder == 0:
+    GCD is b
+  else
+    let a = b, b = r
+
+
