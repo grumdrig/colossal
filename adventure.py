@@ -87,7 +87,7 @@ class Room(Vessel):
     Vessel.__init__(self, capacity=float('inf'))
     self.name = name
     self.description = description
-    self.exits = exits
+    self.exits = dict([(n,ROOMS.get(n,x)) for (n,x) in exits.items()])
     global DIRECTIONS
     DIRECTIONS |= set(exits.keys())
     self.resources = resources or {}
@@ -106,6 +106,8 @@ class Room(Vessel):
         if item.type != 'You' and not item.fixed:
           result += '\n\nThere is ' + item.describe(True) + ' here.'
     return result
+
+  def onTick(self): pass
           
 
 ADJECTIVES = [
@@ -212,9 +214,12 @@ class Verb:
     self.objects = []
     def parseparam(param):
       result = { 'optional': param[-1] == '?',
-                 'multi': param[0] == '*' }
+                 'multi': param[0] == '*',
+                 'held': False }
       if result['optional']: param = param[:-1]
       if result['multi']: param = param[1:]
+      result['held'] = param[-1:] == '@'
+      if result['held']: param = param[:-1]
       object = param.split(':')
       result['name'] = object[0] or object[1]
       result['type'] = len(object) > 1 and object[1]
@@ -240,14 +245,19 @@ class Verb:
       else:
         parameter = self.objects[nobjects]
         nobjects += 1
-        
-      if parameter['multi']:
-        arguments[parameter['name']] = input.pop(0)
-      elif parameter['type'] == 'str':
+
+      if parameter['type'] == 'str':
         arguments[parameter['name']] = input.pop(0)
       else:
         item = input.pop(0)
-        obj = subject.resolve([item]) 
+        location = subject if parameter['held'] else subject.location
+        if input and input[0] == 'in':
+          input.pop(0)
+          location = subject.resolve(input.pop(0), location)
+        if parameter['multi']:
+          obj = location.find([item])
+        else:
+          obj = subject.resolve(item, location) 
         if not obj:
           return say('What ' + item + '?')
         if parameter['type'] and parameter['type'] != obj.type:
@@ -264,6 +274,7 @@ class Verb:
         else:
           arguments[v['name']] = None
 
+    """
     for parameter in self.pps.values() + self.objects:
       if (parameter['multi'] and
           parameter['type'] != 'str' and
@@ -280,6 +291,7 @@ class Verb:
           arguments[parameter['name']] = location.find([arg])
         if not arguments[parameter['name']]:
           return say("You can't", self.verb, "what ain't there.")
+    """
 
     return getattr(subject, self.verb)(**arguments)
 
@@ -292,18 +304,16 @@ class Entity(Item):
     self.mobile = True
     self.active = True
 
-  def resolve(self, q):
-    if not q: return None
-    item = q[0]
+  def resolve(self, item, location=None):
     if item == 'self':
       return self
     elif item == 'here':
       return self.location
     else:
-      items = self.find([item]) or self.location.find([item])
+      location = location or self.location
+      items = location.find([item])
       if not items:
-        items = sum([i.find([item])
-                     for i in self.items + self.location.items], [])
+        items = sum([i.find([item]) for i in location.items], [])
       return items and items[0] or None
 
   Verb('INVENTORY')
@@ -320,16 +330,16 @@ class Entity(Item):
     if direction not in self.location.exits:
       say("You can't go that way.")
     else:
-      location = ROOMS[self.location.exits[direction]]
+      location = self.location.exits[direction]
       self.move(None)
       self.move(location)
 
-  Verb('WRITE text:str WITH :pen ON paper:parchment')
+  Verb('WRITE text:str WITH :pen@ ON paper:parchment')
   def write(self, text, pen, paper):
     paper.write(text)
     say('You write on the', str(paper) + '.')
 
-  Verb('DIG WITH :shovel IN where?')
+  Verb('DIG WITH :shovel@ IN where?')
   def dig(self, shovel, where):
     where = where or self.location
     if hasattr(where, 'resources'):
@@ -417,22 +427,22 @@ class Entity(Item):
   def tell(self, whom, speech):
     whom.onHear(speech, self)
 
-  Verb('TAKE *items FROM vessel?')
-  def take(self, vessel, items):
+  Verb('TAKE *items')
+  def take(self, items):
     for item in items:
       item.move(self, str(item) + ' taken.')
 
-  Verb('DROP *items')
+  Verb('DROP *items@')
   def drop(self, items):
     for item in items:
       item.move(self.location, str(item) + ' dropped.')
 
-  Verb('PUT *items IN vessel')
+  Verb('PUT *items@ INTO vessel')
   def put(self, items, vessel):
     for item in items:
-      item.move(vessel, 'You put the', item, 'in the', str(vessel) + '.')
+      item.move(vessel, 'You put the', item, 'into the', str(vessel) + '.')
 
-  Verb('GIVE *items TO vessel')
+  Verb('GIVE *items@ TO vessel')
   def give(self, items, vessel):
     for item in items:
       item.move(vessel, 'You give the', item, 'to the', str(vessel) + '.')
@@ -463,10 +473,10 @@ class Entity(Item):
     command = words.pop(0).lower()
 
     if command in VERBS:
-      return VERBS[command].do(self, words)
+      VERBS[command].do(self, words)
 
     elif command in DIRECTIONS:
-      return self.go(command)
+      self.go(command)
 
     elif command == 'obey':
       orders = self.find(words)
@@ -483,6 +493,8 @@ class Entity(Item):
 
     else:
       say('I did not understand that.')
+
+    self.location.onTick()
 
 
   def execute(self, lines=None):
@@ -532,6 +544,7 @@ cv = Room('Cheaterville',
           { 'uncheat': osh })
 Item('parchment', cv).name = 'pp'
 Item('pen', cv).name = 'pn'
+Item('bag', cv).name = 'bg'
 
 #-----------------------------------------------------------------------------#
 
@@ -684,24 +697,24 @@ cauldron = Furniture('blackened cauldron', 'East chamber',
 
 #-----------------------------------------------------------------------------#
 
-Room('Hall of justice',
-     "In contrast with the natural caves nearby, this room seems to have been carved from the living stone, which, as it happens, is a pure white marble. Upon a stone dias in the middle of the room is a classical statue of a blindfolded woman. From her outstretched right hand dangles a golden balance scale. Her left arm is bent at the elbow and her middle finger is held upright, forever fixed in some ancient gesture whose meaning is now long lost.\nThe only exit is to the northwest.",
-     { 'northwest': 'East chamber' })
+class HallOfJustice(Room):
+  def onTick(self):
+    balance.weigh()
+HallOfJustice('Hall of justice',
+              "In contrast with the natural caves nearby, this room seems to have been carved from the living stone, which, as it happens, is a pure white marble. Upon a stone dias in the middle of the room is a classical statue of a blindfolded woman. From her outstretched right hand dangles a golden balance scale. Her left arm is bent at the elbow and her middle finger is held upright, forever fixed in some ancient gesture whose meaning is now long lost.\nThe only exit is to the northwest.",
+              { 'northwest': 'East chamber' })
 class Balance(Furniture):
   def onTake(self, item, source):
+    self.weigh()
+  def weigh(self):
     if len(self.items) == 2:
       w1,w2 = [item.weight() for item in self.items]
-      if w1 == w2:
-        say('The scale stays in balance.')
-      elif w2 > w1:
+      if w2 > w1:
         self.items.reverse()
-        say('The far side of the scale occupied by the', self.items[0],
-            'dips and rotates towards you.')
-      else:
-        say('The near side of the scale occupied by the', self.items[0],
-            'dips lower.')
-Balance('balance scale', 'Hall of justice',
-        "This ornate golden scale appears to be fully functional. There is a place to put an item on either side.",
+        say('The far side of the', self, 'occupied by the', self.items[0],
+            'rotates forwards.')
+balance = Balance('balance scale', 'Hall of justice',
+        "This ornate golden scale appears to be fully functional. It operates on a swivel so that the heavier item placed in it's two weighing pans will rotate to the front.",
         capacity=2)
 
 #-----------------------------------------------------------------------------#
@@ -811,8 +824,10 @@ ALIASES = {
   'sw': 'southwest',
   'exit': 'out',
   'enter': 'in',
-  'into': 'in',
-  'inside': 'in',
+  'from': 'in',
+  'of': 'in',
+  'inside': 'into',
+  'onto': 'into',
   'me': 'self',
   'myself': 'self',
   'yourself': 'self',

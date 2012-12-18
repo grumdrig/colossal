@@ -1,14 +1,8 @@
-e
-take shovel
-e 
-ne
-n
-n
-n
-e
-take bag from cauldron
-se
-l bag
-put shovel in balance
-put bag in balance
-take last from balance
+cheat
+take all from here
+uncheat
+l mailbox
+open mailbox
+put pp into bag
+l mailbox
+write fuck on pp in mailbox with pen
