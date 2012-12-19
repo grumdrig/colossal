@@ -553,7 +553,7 @@ cv = Room('Cheaterville',
 Item('parchment', cv).name = 'pp'
 Item('pen', cv).name = 'pn'
 Item('bag', cv, capacity=float('inf'))
-Item('dirt', Item('bag', cv, capacity=float('inf'))).qty = 0.5
+Item('bag', cv, capacity=float('inf'))
 
 
 #-----------------------------------------------------------------------------#

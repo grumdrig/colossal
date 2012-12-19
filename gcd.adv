@@ -8,6 +8,8 @@ call bag H
 uncheat
 e
 take shovel
+dig with shovel
+dig with shovel
 e 
 ne
 n
@@ -16,6 +18,18 @@ n
 n
 n
 n
+n
+n
+w
+open cupboard
+take pan
+put dirt into pan
+drop pan
+put dirt into H
+e
+s
+s
+
 write with pen on parchment ';;'
 put parchment into shredder
 
