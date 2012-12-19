@@ -1,6 +1,6 @@
 think "Hello world script"
-e
-e
+go east
+east
 ne
 n
 get all from backpack
