@@ -1,45 +1,136 @@
 think "Greatest common divisor"
+cheat
+take parchment
+take last
+call last T
+take last
+call bag H
+uncheat
 e
 take shovel
 e 
 ne
 n
+take pen from backpack
+n
+
+n
+
 n
 n
+
+write with pen on parchment '1;2;3;4'
+put parchment into shredder
+
+take parchment from shredder
+call last in me "TESTB"
+erase TESTB
+
+take parchment from shredder
+call last in me "SUBTRACT"
+erase SUBTRACR
+
+take parchment from shredder
+call last in me "DONE"
+erase DONE
+
+take parchment from shredder
+call last in me "DIVIDE"
+erase DIVIDE
+
+write with pen on TESTB "take all from scale"
+write with pen on TESTB "put A onto scale"
+write with pen on TESTB "put B onto scale"
+write with pen on TESTB "call first in scale A"
+write with pen on TESTB "call last in scale B"
+write with pen on TESTB "take A"
+write with pen on TESTB "put H onto scale"
+write with pen on TESTB "take parchment from B"
+write with pen on TESTB "take parchment from H"
+write with pen on TESTB "put DIVIDE into B"
+write with pen on TESTB "put DONE into H"
+write with pen on TESTB "obey parchment in first in scale"
+
+write with pen on DIVIDE "take dirt from T"
+write with pen on DIVIDE "put dirt into B"
+write with pen on DIVIDE "take all from scale"
+write with pen on DIVIDE "take parchment from A"
+write with pen on DIVIDE "take parchment from B"
+write with pen on DIVIDE "put SUBTRACT into A"
+write with pen on DIVIDE "put TESTB into B"
+#write with pen on DIVIDE "obey parchment in first in scale"
+
+write with pen on SUBTRACT "dig from B with shovel"
+write with pen on SUBTRACT "put dirt into T"
+write with pen on SUBTRACT "dig from A with shovel"
+write with pen on SUBTRACT "drop dirt"
+write with pen on SUBTRACT "take all from scale"
+write with pen on SUBTRACT "put B on scale"
+write with pen on SUBTRACT "put H on scale"
+write with pen on SUBTRACT "take parchment from B"
+write with pen on SUBTRACT "take parchment from H"
+write with pen on SUBTRACT "put SUBTRACT into B"
+write with pen on SUBTRACT "put DIVIDE into H"
+write with pen on SUBTRACT "obey parchment in first in scale"
+
+write with pen on DONE "walk to drain"
+write with pen on DONE "put A into drain"
+write with pen on DONE "quit"
+
+drop pen
+
+s
+s
 e
-take bag from cauldron
-take bag from cauldron
+call first in cauldron A
+take A from cauldron
+call first in cauldron B
+take B from cauldron
+i
 se
-put last into balance
-put bag into balance
+obey TESTB
+quit
+l scale
+l TESTB
+l parchment in first in scale
+obey parchment in first in scale
+l scale
+quit
+put A into balance
+put B into balance
 l balance
 call first in balance A
 call last from balance B
-l balance
-l A
-l B
-dig in A with shovel
-dig in A with shovel
-dig in A with shovel
-dig in A with shovel
-l A
-l B
-l scale
-quit
-obey Divide
+take A
+i
+put H into balance
+put DONE in H
+put DIVIDE in A
+obey parchment in first in scale
 
-cheat bag
-call last T
-cheat parchment
-call last X
-write on X with pen "put A on balance"
-write on X with pen ""
-write on X with pen ""
-write on X with pen ""
-write on X with pen ""
-write on X with pen ""
-write on X with pen ""
-write on X with pen ""
+
+quit
+
+TEST-B:
+  sort so A >= B
+  B says DIVIDE
+  H says DONE
+
+DONE:
+  dunk the A
+
+DIVIDE:
+  move dirt from T into B
+  A says SUBTRACT
+  B says TEST-B
+
+SUBTRACT:
+  (dig out of B into T, A into nowhere)
+  B says SUBTRACT
+  H says DIVIDE
+
+
+
 
 10:
 
