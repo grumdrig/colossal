@@ -316,7 +316,7 @@ class Itemspec:
     if q and q[0] == 'called':
       q.pop(0)
       self.name = q and q.pop(0)
-    elif q and q[0] in NAMES:
+    if not (self.adjective or self.type or self.name) and q and q[0] in NAMES:
       self.name = q.pop(0)
 
   def __bool__(self):
@@ -428,7 +428,7 @@ class Entity(Item):
   def look(self, thing=None):
     say((thing or self.location).describe())
 
-  Verb('CALL item AS name:str')
+  Verb('CALL item name:str')
   def call(self, item, name):
     item.name = None
     desc = str(item)

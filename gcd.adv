@@ -8,7 +8,7 @@ ne
 n
 take pen from backpack
 take backpack
-rename backpack as H
+call backpack H
 n
 n
 n
@@ -27,21 +27,21 @@ w
 open cabinet
 take parchment from folder from cabinet
 take folder from cabinet
-rename folder as T
+call folder T
 e
 s
 
 put parchment into shredder
 
 take first parchment from shredder
-rename last in me as "TESTB"
+call last in me "TESTB"
 erase TESTB
 write with pen on TESTB "think TESTB"
 write with pen on TESTB "take all from scale"
 write with pen on TESTB "put A onto scale"
 write with pen on TESTB "put B onto scale"
-write with pen on TESTB "rename first in scale as A"
-write with pen on TESTB "rename last in scale as B"
+write with pen on TESTB "call first in scale A"
+write with pen on TESTB "call last in scale B"
 write with pen on TESTB "take A"
 write with pen on TESTB "put H onto scale"
 write with pen on TESTB "take parchment from A"
@@ -51,7 +51,7 @@ write with pen on TESTB "put DIVIDE into B"
 write with pen on TESTB "obey parchment in first in scale"
 
 take first parchment from shredder
-rename last in me as "DIVIDE"
+call last in me "DIVIDE"
 erase DIVIDE
 write with pen on DIVIDE "think DIVIDE"
 write with pen on DIVIDE "take dirt from T"
@@ -67,7 +67,7 @@ write with pen on DIVIDE "put B onto scale"
 write with pen on DIVIDE "obey parchment in first in scale"
 
 take first parchment from shredder
-rename last in me as "SUBTRACT"
+call last in me "SUBTRACT"
 erase SUBTRACT
 write with pen on SUBTRACT "think SUBTRACT"
 write with pen on SUBTRACT "dig from B with shovel"
@@ -89,9 +89,9 @@ drop pen
 s
 s
 e
-rename first in cauldron as A
+call first in cauldron A
 take A from cauldron
-rename first in cauldron as B
+call first in cauldron B
 take B from cauldron
 se
 obey TESTB
