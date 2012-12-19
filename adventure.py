@@ -1,5 +1,25 @@
 #! /usr/bin/python
 
+"""Usage: adventure.py [OPTS] [PARAMETERS]
+
+Runs the Tarpit Adventure, the text adventure that's also a
+programming language.
+
+OPTS:
+  -f FILENAME  Perform the steps specified in the file FILENAME
+  -v           Print feedback to stderr [default only in interactive mode]
+  -V           Print feedback to stdout
+  -q           Do not output feedback [default in noninteractive mode]
+  -h           Print this stuff, right here.
+
+If no filename arguments are specified, run an interactive session.
+
+PARAMETERS:
+
+Any further parameters passed on the command line appear within the
+adventure somewhere. I won't spoil it by telling you where.
+"""
+
 import sys, random, getopt, textwrap, shlex, fileinput
 
 
@@ -784,12 +804,13 @@ def Cap(s):
   return s[:1].upper() + s[1:]
 
 
-VERBOSE = False
+FEEDBACK = None
+
 
 def say(*args):
-  if VERBOSE:
+  if FEEDBACK:
     for s in Cap(' '.join([str(a) for a in args])).split('\n'):
-      sys.stdout.write(textwrap.fill(s) + '\n')
+      FEEDBACK.write(textwrap.fill(s) + '\n')
 
 def output(lines):
   print '\n'.join(lines)
@@ -833,18 +854,24 @@ ALIASES = {
 
 
 def main():
-  global VERBOSE
-  opts,args = getopt.getopt(sys.argv[1:], 'vqf:')
-  VERBOSE = None
+  global FEEDBACK
+  opts,args = getopt.getopt(sys.argv[1:], 'vVqf:h')
+  FEEDBACK = None
   FILENAMES = []
   for o,a in opts:
     if o == '-v':
-      VERBOSE = True
+      FEEDBACK = sys.stderr
+    elif o == '-V':
+      FEEDBACK = sys.stdout
     elif o == '-q':
-      VERBOSE = False
+      FEEDBACK = False
     elif o == '-f':
       FILENAMES.append(a)
-  if VERBOSE == None: VERBOSE = not FILENAMES
+    else:
+      sys.stderr.write(__doc__)
+      sys.exit()
+  if FEEDBACK == None and not FILENAMES:
+    FEEDBACK = sys.stderr
 
   say('Welcome to Tarpit Adventure!')
   say()
