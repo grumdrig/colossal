@@ -19,57 +19,53 @@ n
 n
 n
 
-write with pen on parchment '1;2;3'
+write with pen on parchment ';;'
 put parchment into shredder
 
 take parchment from shredder
 call last in me "TESTB"
-erase TESTB
-
-take parchment from shredder
-call last in me "SUBTRACT"
-erase SUBTRACR
-
-take parchment from shredder
-call last in me "DIVIDE"
-erase DIVIDE
-
 write with pen on TESTB "think TESTB"
 write with pen on TESTB "take all from scale"
 write with pen on TESTB "put A onto scale"
 write with pen on TESTB "put B onto scale"
 write with pen on TESTB "call first in scale A"
 write with pen on TESTB "call last in scale B"
+write with pen on TESTB "l A;l B"
 write with pen on TESTB "take A"
 write with pen on TESTB "put H onto scale"
+write with pen on TESTB "take parchment from A"
 write with pen on TESTB "take parchment from B"
 write with pen on TESTB "take parchment from H"
 write with pen on TESTB "put DIVIDE into B"
-write with pen on TESTB "l scale"
-write with pen on TESTB "l first in scale"
-write with pen on TESTB "l parchment in first in scale"
 write with pen on TESTB "obey parchment in first in scale"
 
+take parchment from shredder
+call last in me "DIVIDE"
 write with pen on DIVIDE "think DIVIDE"
 write with pen on DIVIDE "take dirt from T"
-write with pen on DIVIDE "put dirt into B"
+write with pen on DIVIDE "put dirt in me into B"
+write with pen on DIVIDE "l B"
 write with pen on DIVIDE "take all from scale"
 write with pen on DIVIDE "take parchment from A"
 write with pen on DIVIDE "take parchment from B"
+write with pen on DIVIDE "take parchment from H"
 write with pen on DIVIDE "put SUBTRACT into A"
 write with pen on DIVIDE "put TESTB into B"
 write with pen on DIVIDE "put A onto scale"
 write with pen on DIVIDE "put B onto scale"
 write with pen on DIVIDE "obey parchment in first in scale"
 
+take parchment from shredder
+call last in me "SUBTRACT"
 write with pen on SUBTRACT "think SUBTRACT"
 write with pen on SUBTRACT "dig from B with shovel"
-write with pen on SUBTRACT "put dirt into T"
+write with pen on SUBTRACT "put dirt in me into T"
 write with pen on SUBTRACT "dig from A with shovel"
-write with pen on SUBTRACT "drop dirt"
+write with pen on SUBTRACT "drop dirt in me"
 write with pen on SUBTRACT "take all from scale"
-write with pen on SUBTRACT "put B on scale"
-write with pen on SUBTRACT "put H on scale"
+write with pen on SUBTRACT "put B onto scale"
+write with pen on SUBTRACT "put H onto scale"
+write with pen on SUBTRACT "take parchment from A"
 write with pen on SUBTRACT "take parchment from B"
 write with pen on SUBTRACT "take parchment from H"
 write with pen on SUBTRACT "put SUBTRACT into B"
