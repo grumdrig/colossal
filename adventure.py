@@ -25,8 +25,12 @@ import sys, random, getopt, textwrap, shlex, fileinput, math
 
 ROOMS = { }  # Mapping from room names to rooms
 DIRECTIONS = set()  # All possible directions one might go
+NOUNS = set()
+ADJECTIVES = set()
+NAMES = set()
 
-class Vessel:
+
+class Vessel(object):
   def __init__(self, capacity=0, closed=None, locked=None):
     self.items = []
     self.capacity = capacity or 0
@@ -34,17 +38,19 @@ class Vessel:
     self.locked = locked
     self.location = None
     
-  def find(self, q):
-    if not q:
+  def find(self, spec):
+    if not spec:
       return []
-    elif q[0].lower() == 'first':
-      q.pop(0)
-      return [i for i in self.items if not (i.fixed or i.mobile)][:1]
-    elif q[0].lower() == 'last':
-      q.pop(0)
-      return [i for i in self.items if not (i.fixed or i.mobile)][-1:]
+    if spec.selector:
+      pool = [i for i in self.items if not (i.fixed or i.mobile)]
+      if spec.selector == 'all':
+        return pool
+      elif spec.selector == 'first':
+        return pool[:1]
+      elif spec.selector == 'last':
+        return pool[-1:]
     else:
-      return [o for o in self.items if o.match(q)]
+      return [o for o in self.items if o.match(spec)]
 
   def move(self, dest, *message):
     container = dest
@@ -128,7 +134,7 @@ class Room(Vessel):
   def onTick(self): pass
           
 
-ADJECTIVES = [
+ORDINARY = [
   'common', 'regular', 'ordinary', 'everyday', 'humdrum', 'normal',
   'quotidian', 'run-of-the-mill', 'standard', 'typical', 'conventional',
   'orthodox', 'garden-variety', 'undistinguished', 'average',
@@ -152,7 +158,11 @@ class Item(Vessel):
     else:
       self.type = type
       self.adjective = None
-    self.name = None
+    global ADJECTIVES
+    NOUNS.add(self.type)
+    if self.adjective:
+      ADJECTIVES.add(self.adjective)
+    self._name = None
     self.fixed = False
     self.mobile = False
     self.writing = []
@@ -187,27 +197,31 @@ class Item(Vessel):
         result += '\n  ' + Cap(item.describe(True)) + '.'
     return result
 
+  @property
+  def name(self):
+    return self._name
+  
+  @name.setter
+  def name(self, name):
+    if name:
+      NAMES.add(name)
+    self._name = name
+
   def write(self, text):
     self.writing += [line.strip() for line in text.split(';')]
 
-  def match(self, q):
-    def q0(b):
-      return q and b and q[0].lower() == b.lower()
-    if not q:
-      return None
-    if q0('it'):
-      q.pop(0)
-      return self
-    elif q0(self.name):
-      q.pop(0)
-      return self
-    result = None
-    if q0(self.adjective):
-      result = self
-      q.pop(0)
-    if q0(self.type):
-      result = self
-      q.pop(0)
+  def match(self, spec):
+    result = not not spec.selector
+    if spec.selector == 'first' and self != self.location.items[0]:
+      return False
+    if spec.selector == 'last' and self != self.location.itens[-1]:
+      return False
+    for a in 'adjective','type','name':
+      if getattr(spec, a):
+        if getattr(spec, a) == getattr(self, a):
+          result = True
+        else:
+          return False
     return result
 
   def weight(self):
@@ -287,7 +301,34 @@ class Verb:
     return getattr(subject, self.verb)(**arguments)
 
 
-          
+class Itemspec:
+  def __init__(self, q):
+    self.adjective = None
+    self.type = None
+    self.name = None
+    self.selector = None
+    if q and q[0] in ('all','first','last'):
+      self.selector = q.pop(0)
+    if q and q[0] in ADJECTIVES:
+      self.adjective = q.pop(0)
+    if q and q[0] in NOUNS:
+      self.type = q.pop(0)
+    if q and q[0] == 'called':
+      q.pop(0)
+      self.name = q and q.pop(0)
+    elif q and q[0] in NAMES:
+      self.name = q.pop(0)
+
+  def __bool__(self):
+    return not not (self.adjective or self.type or self.name or self.selector)
+
+  def __repr__(self):
+    return '"' + str(self) + '"'
+
+  def __str__(self):
+    return (self.selector or
+            ' '.join([w for w in self.selector, self.adjective, self.type, self.name if w]))
+
 
 class Entity(Item):
   def __init__(self, type, location, description):
@@ -297,26 +338,32 @@ class Entity(Item):
     self.stack = []
 
   def resolve(self, q, root, multi=False, type=None):
-    item = q.pop(0)
-    if item == 'self':
+    if q[0] == 'self':
+      q.pop(0)
       return self
-    elif item == 'here':
+    elif q[0] == 'here':
+      q.pop(0)
       return self.location
+
+    spec = Itemspec(q)
+    if spec.name == q:
+      return say('Called what?')
+    elif spec.selector == 'all' and not multi:
+      return say("You can't specify multiple objects in this context.")
+
+    if not spec:
+      return say("I didn't understand. " + Cap(q[0]) + "?")
+
     if q and q[0] == 'in':
       q.pop(0)
       root = self.resolve(q, root)
       if not root:
-        return say("I don't see a", repr(item), "there.")
-    if item == 'all':
-      if not multi:
-        return say("You can't use 'all' in this context.")
-      objs = root.items[:]
-    else:
-      objs = root.find([item])[:1]
+        return say("I don't see a", repr(spec), "there.")
+    objs = root.find(spec)
     if not objs:
-      return say('What ' + item + '?')
-    elif not multi and len(objs) > 1:
-      return say('Which ' + item + '?')
+      return say('What ' + repr(spec) + '?')
+    elif len(objs) > 1 and spec.selector != 'all':
+      return say('Which ' + str(spec) + '?')
     if type:
       for obj in objs:
         if type != obj.type:
@@ -358,7 +405,7 @@ class Entity(Item):
         if item.move(self):
           say('You dig up some', item, 'and add it to your inventory.')
     else:
-      dirts = where.find(['dirt'])
+      dirts = where.find(Itemspec(['dirt']))
       if not dirts:
         say("There's nothing worth digging there.")
       elif dirts[0].qty <= 1:
@@ -381,7 +428,7 @@ class Entity(Item):
   def look(self, thing=None):
     say((thing or self.location).describe())
 
-  Verb('CALL item name:str')
+  Verb('CALL item AS name:str')
   def call(self, item, name):
     item.name = None
     desc = str(item)
@@ -543,7 +590,6 @@ osh = Room('Outside of a small house',
              'west': 'Crossroads',
              'cheat': 'Cheaterville',
              'in': 'Inside the small house' })
-Item('blank parchment', osh)
 mailbox = Furniture('mailbox',
                     osh,
                     'A fairly ordinary mailbox, used mostly to receive mail. The kind with a flag on the side and so forth. The number "200" is proudly emblazoned with vinyl stickers on one side.',
@@ -555,7 +601,8 @@ mailbox = Furniture('mailbox',
 cv = Room('Cheaterville',
           'Nothing to see here. Move along.',
           { 'uncheat': osh })
-Item('bag', cv, capacity=float('inf'))
+b = Item('nut bag', cv, capacity=float('inf'))
+b.name = 'rex'
 
 
 #-----------------------------------------------------------------------------#
@@ -900,6 +947,7 @@ ALIASES = {
   'myself': 'self',
   'yourself': 'self',
   'rename': 'call',
+  'name': 'call',
   'follow': 'obey',
   'execute': 'obey',
   'perform': 'obey',
@@ -938,8 +986,8 @@ def main():
   if args:
     Item('letter', mailbox).writing = args
     for arg in args:
-      bag = Item('bag', cauldron, capacity=float('inf'))
-      bag.adjective = random.choice(ADJECTIVES)
+      bag = Item(random.choice(ORDINARY) + ' bag', cauldron,
+                 capacity=float('inf'))
       try:
         q = float(arg)
         Item('dirt', bag).qty = q
