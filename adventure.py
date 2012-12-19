@@ -29,6 +29,11 @@ NOUNS = set()
 ADJECTIVES = set()
 NAMES = set()
 
+TYPES = {
+  'page': 'parchment',
+  'paper': 'parchment',
+  'letter': 'parchment'
+  }
 
 class Vessel(object):
   def __init__(self, capacity=0, closed=None, locked=None):
@@ -150,16 +155,17 @@ MASS_NOUNS = ['dirt'];
 
 
 class Item(Vessel):
-  def __init__(self, type, location, description=None,
+  def __init__(self, phrase, location, description=None,
                capacity=0, closed=None, locked=None, qty=None):
     Vessel.__init__(self, capacity=capacity, closed=closed, locked=locked)
-    if len(type.split(' ')) > 1:
-      self.adjective, self.type = type.split(' ')
+    if len(phrase.split(' ')) > 1:
+      self.adjective, self.noun = phrase.split(' ')
     else:
-      self.type = type
+      self.noun = phrase
       self.adjective = None
+    self.type = TYPES.get(self.noun, self.noun)
     global ADJECTIVES
-    NOUNS.add(self.type)
+    NOUNS.add(self.noun)
     if self.adjective:
       ADJECTIVES.add(self.adjective)
     self._name = None
@@ -171,7 +177,7 @@ class Item(Vessel):
     if location: self.move(location)
 
   def __str__(self):
-    result = (self.adjective + ' ' if self.adjective else '') + self.type
+    result = (self.adjective + ' ' if self.adjective else '') + self.noun
     if self.name:
       result += ' called "' + self.name + '"'
     return result
@@ -190,9 +196,9 @@ class Item(Vessel):
       for line in self.writing:
         result += '\n  ' + line
     if self.closed:
-      result += '\nThe ' + self.type + ' is closed.'
+      result += '\nThe ' + self.noun + ' is closed.'
     elif self.items:
-      result += '\nThe ' + self.type + ' contains:'
+      result += '\nThe ' + self.noun + ' contains:'
       for item in self.items:
         result += '\n  ' + Cap(item.describe(True)) + '.'
     return result
@@ -216,7 +222,7 @@ class Item(Vessel):
       return False
     if spec.selector == 'last' and self != self.location.itens[-1]:
       return False
-    for a in 'adjective','type','name':
+    for a in 'adjective','noun','name':
       if getattr(spec, a):
         if getattr(spec, a) == getattr(self, a):
           result = True
@@ -229,9 +235,9 @@ class Item(Vessel):
   
 
 class Furniture(Item):
-  def __init__(self, type, location, description=None,
+  def __init__(self, phrase, location, description=None,
                capacity=float('inf'), closed=None, locked=None):
-    Item.__init__(self, type, location, description=description,
+    Item.__init__(self, phrase, location, description=description,
                   capacity=capacity, closed=closed, locked=locked)
     self.fixed = True
 
@@ -304,7 +310,7 @@ class Verb:
 class Itemspec:
   def __init__(self, q):
     self.adjective = None
-    self.type = None
+    self.noun = None
     self.name = None
     self.selector = None
     if q and q[0] in ('all','first','last'):
@@ -312,27 +318,27 @@ class Itemspec:
     if q and q[0] in ADJECTIVES:
       self.adjective = q.pop(0)
     if q and q[0] in NOUNS:
-      self.type = q.pop(0)
+      self.noun = q.pop(0)
     if q and q[0] == 'called':
       q.pop(0)
       self.name = q and q.pop(0)
-    if not (self.adjective or self.type or self.name) and q and q[0] in NAMES:
+    if not (self.adjective or self.noun or self.name) and q and q[0] in NAMES:
       self.name = q.pop(0)
 
   def __bool__(self):
-    return not not (self.adjective or self.type or self.name or self.selector)
+    return not not (self.adjective or self.noun or self.name or self.selector)
 
   def __repr__(self):
     return '"' + str(self) + '"'
 
   def __str__(self):
     return (self.selector or
-            ' '.join([w for w in self.selector, self.adjective, self.type, self.name if w]))
+            ' '.join([w for w in self.selector, self.adjective, self.noun, self.name if w]))
 
 
 class Entity(Item):
-  def __init__(self, type, location, description):
-    Item.__init__(self, type, location, description, capacity=9)
+  def __init__(self, phrase, location, description):
+    Item.__init__(self, phrase, location, description, capacity=9)
     self.mobile = True
     self.active = True
     self.stack = []
@@ -367,7 +373,7 @@ class Entity(Item):
     if type:
       for obj in objs:
         if type != obj.type:
-          return say('The', obj, "can't be used for that.")
+          return say('The', obj, "can't be used for that.", type, obj.type)
     return objs if multi else objs[0]
       
 
@@ -422,7 +428,7 @@ class Entity(Item):
   Verb('ERASE :parchment')
   def erase(self, parchment):
     parchment.writing = []
-    say('You erase everything written on ' + str(parchment) + '.')
+    say('You erase everything written on the ' + str(parchment) + '.')
 
   Verb('LOOK thing?')
   def look(self, thing=None):
@@ -665,7 +671,7 @@ class Devil(Entity):
       for item in source.items:
         if item.qty:
           item.qty *= 2
-          say("Your supply of", item.type, "is doubled.")
+          say("Your supply of", item.noun, "is doubled.")
 Devil('devil', 'Crossroads',
        "This is the Lord Beelzebub. Satan. Lucifer. You've heard the stories. He's just hanging around here, not really doing too much. Just thinking about stuff.").name = 'Satan'
 Item('soul', 'Crossroads')

@@ -1,57 +1,15 @@
-open mailbox
-read letter in mailbox
-cheat
-call bag wolf
-call bag called wolf rex
-quit
-take bag
-drop rex
-take rex
-quit
-drop bag
-take nut
-drop nut bag
-grab nut bag called rex
-put rex into here
-quit
-
+think "Hello world script"
 e
 e
 ne
 n
+get all from backpack
+erase page
+write on page with pen "Hello, World!"
+n
+n
+n
 n
 n
 e
-l cauldron
-quit
-e
-take all
-dig with shovel
-dig with shovel
-dig with shovel
-dig with shovel
-dig with shovel
-dig with shovel
-dig with shovel
-dig with shovel
-dig with shovel
-dig with shovel
-e
-ne
-n
-n
-n
-n
-n
-n
-n
-n
-w
-open cupboard
-take all from cupboard
-i
-put dirt into pie
-put dirt into cake
-l pie
-l cake
-i
+put page into drain
