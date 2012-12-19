@@ -19,7 +19,7 @@ n
 n
 n
 
-write with pen on parchment '1;2;3;4'
+write with pen on parchment '1;2;3'
 put parchment into shredder
 
 take parchment from shredder
@@ -31,13 +31,10 @@ call last in me "SUBTRACT"
 erase SUBTRACR
 
 take parchment from shredder
-call last in me "DONE"
-erase DONE
-
-take parchment from shredder
 call last in me "DIVIDE"
 erase DIVIDE
 
+write with pen on TESTB "think TESTB"
 write with pen on TESTB "take all from scale"
 write with pen on TESTB "put A onto scale"
 write with pen on TESTB "put B onto scale"
@@ -48,9 +45,12 @@ write with pen on TESTB "put H onto scale"
 write with pen on TESTB "take parchment from B"
 write with pen on TESTB "take parchment from H"
 write with pen on TESTB "put DIVIDE into B"
-write with pen on TESTB "put DONE into H"
+write with pen on TESTB "l scale"
+write with pen on TESTB "l first in scale"
+write with pen on TESTB "l parchment in first in scale"
 write with pen on TESTB "obey parchment in first in scale"
 
+write with pen on DIVIDE "think DIVIDE"
 write with pen on DIVIDE "take dirt from T"
 write with pen on DIVIDE "put dirt into B"
 write with pen on DIVIDE "take all from scale"
@@ -58,8 +58,11 @@ write with pen on DIVIDE "take parchment from A"
 write with pen on DIVIDE "take parchment from B"
 write with pen on DIVIDE "put SUBTRACT into A"
 write with pen on DIVIDE "put TESTB into B"
-#write with pen on DIVIDE "obey parchment in first in scale"
+write with pen on DIVIDE "put A onto scale"
+write with pen on DIVIDE "put B onto scale"
+write with pen on DIVIDE "obey parchment in first in scale"
 
+write with pen on SUBTRACT "think SUBTRACT"
 write with pen on SUBTRACT "dig from B with shovel"
 write with pen on SUBTRACT "put dirt into T"
 write with pen on SUBTRACT "dig from A with shovel"
@@ -73,10 +76,6 @@ write with pen on SUBTRACT "put SUBTRACT into B"
 write with pen on SUBTRACT "put DIVIDE into H"
 write with pen on SUBTRACT "obey parchment in first in scale"
 
-write with pen on DONE "walk to drain"
-write with pen on DONE "put A into drain"
-write with pen on DONE "quit"
-
 drop pen
 
 s
@@ -89,6 +88,21 @@ take B from cauldron
 i
 se
 obey TESTB
+
+think DONE
+nw
+w
+n
+n
+e
+put A into scale
+push button
+take label
+w
+n
+e
+put label into drain
+
 quit
 l scale
 l TESTB
