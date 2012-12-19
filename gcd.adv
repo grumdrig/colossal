@@ -1,8 +1,6 @@
 think "Greatest common divisor"
 cheat
 take last
-call last T
-take last
 call bag H
 uncheat
 e
@@ -30,6 +28,8 @@ s
 w
 open cabinet
 take parchment from folder from cabinet
+take folder from cabinet
+call folder T
 e
 s
 

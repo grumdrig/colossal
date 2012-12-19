@@ -555,9 +555,6 @@ mailbox = Furniture('mailbox',
 cv = Room('Cheaterville',
           'Nothing to see here. Move along.',
           { 'uncheat': osh })
-Item('parchment', cv).name = 'pp'
-Item('pen', cv).name = 'pn'
-Item('bag', cv, capacity=float('inf'))
 Item('bag', cv, capacity=float('inf'))
 
 
