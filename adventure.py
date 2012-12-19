@@ -29,6 +29,10 @@ class Vessel:
     else:
       return [o for o in self.items if o.match(q)]
 
+  def findRecursive(self, q):
+    q = [q[0]]
+    return self.find(q) or sum([i.find(q) for i in self.items], [])
+
   def findOne(self, q):
     items = self.find(q)
     return items[0] if len(items) == 1 else None
@@ -249,20 +253,12 @@ class Verb:
       if parameter['type'] == 'str':
         arguments[parameter['name']] = input.pop(0)
       else:
-        item = input.pop(0)
-        location = subject if parameter['held'] else subject.location
-        if input and input[0] == 'in':
-          input.pop(0)
-          location = subject.resolve(input.pop(0), location)
-        if parameter['multi']:
-          obj = location.find([item])
-        else:
-          obj = subject.resolve(item, location) 
-        if not obj:
-          return say('What ' + item + '?')
-        if parameter['type'] and parameter['type'] != obj.type:
-          return say('The', obj, "can't be used for that.")
-        arguments[parameter['name']] = obj
+        root = subject if parameter['held'] else subject.location
+        ob = subject.resolve(input, root, parameter['multi'],
+                             parameter['type'])
+        if not ob:
+          return
+        arguments[parameter['name']] = ob
 
     if (nobjects < len(self.objects) and
         not self.objects[nobjects]['optional']):
@@ -273,25 +269,6 @@ class Verb:
           return say(self.verb, p, 'what?')
         else:
           arguments[v['name']] = None
-
-    """
-    for parameter in self.pps.values() + self.objects:
-      if (parameter['multi'] and
-          parameter['type'] != 'str' and
-          arguments[parameter['name']]):
-        arg = arguments[parameter['name']]
-        location = subject.location if 'from' in self.pps else subject
-        if 'from' in self.pps:
-          location = arguments[self.pps['from']['name']] or location
-        if arg == 'self':
-          arguments[parameter['name']] = [subject]
-        elif arg == 'here':
-          arguments[parameter['name']] = [subject.location]
-        else:
-          arguments[parameter['name']] = location.find([arg])
-        if not arguments[parameter['name']]:
-          return say("You can't", self.verb, "what ain't there.")
-    """
 
     return getattr(subject, self.verb)(**arguments)
 
@@ -304,12 +281,30 @@ class Entity(Item):
     self.mobile = True
     self.active = True
 
-  def resolve(self, item, location=None):
+  def resolve(self, q, root, multi=False, type=None):
+    item = q.pop(0)
     if item == 'self':
       return self
     elif item == 'here':
       return self.location
-    else:
+    if q and q[0] == 'in':
+      q.pop(0)
+      root = self.resolve(q, root)
+      if not root:
+        return say("I don't see a", repr(item), "there.")
+    objs = root.findRecursive([item])
+    if not objs:
+      return say('What ' + item + '?')
+    elif not multi and len(objs) > 1:
+      return say('Which ' + items + '?')
+    if type:
+      for obj in objs:
+        if type != obj.type:
+          return say('The', obj, "can't be used for that.")
+    return objs if multi else objs[0]
+      
+
+  def XXXresolve(self, item, location=None):
       location = location or self.location
       items = location.find([item])
       if not items:
@@ -375,8 +370,10 @@ class Entity(Item):
 
   Verb('CALL item name:str')
   def call(self, item, name):
+    item.name = None
+    desc = str(item)
     item.name = name
-    say("We'll call it \"" + name + '" from now on.')
+    say("We'll call the", desc, '"' + item.name + '" from now on.')
 
   Verb('OPEN vessel')
   def open(self, vessel):
@@ -544,7 +541,9 @@ cv = Room('Cheaterville',
           { 'uncheat': osh })
 Item('parchment', cv).name = 'pp'
 Item('pen', cv).name = 'pn'
-Item('bag', cv).name = 'bg'
+Item('bag', cv, capacity=float('inf'))
+Item('dirt', Item('bag', cv, capacity=float('inf'))).qty = 0.5
+
 
 #-----------------------------------------------------------------------------#
 
