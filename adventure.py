@@ -398,7 +398,12 @@ class Entity(Item):
       say('The', vessel, 'is locked.')
     else:
       vessel.closed = False
-      say('The', vessel, 'is now open.')
+      if vessel.items:
+        say('Opening the', vessel, 'reveals:')
+        for item in vessel.items:
+          say('  ' + Cap(item.describe(True)) + '.')
+      else: 
+        say('The', vessel, 'is now open. It is empty.')
 
   Verb('CLOSE vessel')
   def close(self, vessel):
@@ -758,6 +763,20 @@ Room('Hallway',
        'north': 'More hallway',
        'east': 'Bathroom',
        'west': 'Executive office' })
+
+#-----------------------------------------------------------------------------#
+
+Room('Executive office',
+     "Though not a corner office, this roomy office is well appointed with mahogony panelling and a large picture window with an expansive view of a solid rock wall a few inches away. There's an impressive desk and commodious filing cabinet, and on the wall an original painting which, while abstract, manages to suggest a phallus pretty clearly.",
+     { 'east': 'Hallway' })
+Furniture('oak desk', 'Executive office',
+          "An oppressively impressive oak desk. Under the front edge you notice a red button.")
+fc = Furniture('filing cabinet', 'Executive office',
+               "A tall filing cabinet in dark wood.",
+               capacity=40, closed=True)
+ff = Item('file folder', fc, capacity=24)
+ff.write("Turban, Edward G.")
+Item('personnel parchment', ff).write("PERSONNEL REPORT;Edward G. Turban;;  ...Mr. Turban shows antisocial tendencies...tends to act like a dick...often late to work...;;- Harold Papermaster""")
 
 #-----------------------------------------------------------------------------#
 

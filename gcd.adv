@@ -1,6 +1,5 @@
 think "Greatest common divisor"
 cheat
-take parchment
 take last
 call last T
 take last
@@ -28,9 +27,12 @@ drop pan
 put dirt into H
 e
 s
+w
+open cabinet
+take parchment from folder from cabinet
+e
 s
 
-write with pen on parchment ';;'
 put parchment into shredder
 
 take parchment from shredder
