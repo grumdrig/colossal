@@ -280,6 +280,7 @@ class Entity(Item):
     Item.__init__(self, type, location, description, capacity=9)
     self.mobile = True
     self.active = True
+    self.stack = []
 
   def resolve(self, q, root, multi=False, type=None):
     item = q.pop(0)
@@ -461,8 +462,19 @@ class Entity(Item):
   def push(self, item):
     item.onPush()
 
+  Verb('OBEY orders')
+  def obey(self, orders):
+    self.stack.append(orders)
+    self.active = True
+    for line in orders.writing:
+      if not self.active:
+        break
+      say('>' * (len(self.stack)+1), line)
+      self.parse(line)
+    self.stack.pop()
 
-  def parse(self, line, depth=0):
+
+  def parse(self, line):
     words = [ALIASES.get(word,word) for word in shlex.split(line.strip())]
     if not words:
       return
@@ -474,19 +486,6 @@ class Entity(Item):
 
     elif command in DIRECTIONS:
       self.go(command)
-
-    elif command == 'obey':
-      orders = self.find(words)
-      if len(orders) != 1:
-        say('Obey what, exactly?')
-      else:
-        orders = orders[0]
-        self.active = True
-        for line in orders.writing:
-          if not self.active:
-            break
-          say('>' * (depth+2), line)
-          self.parse(line, depth+1)
 
     else:
       say('I did not understand that.')
