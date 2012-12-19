@@ -1,8 +1,4 @@
 think "Greatest common divisor"
-cheat
-take last
-call bag H
-uncheat
 e
 take shovel
 dig with shovel
@@ -11,6 +7,8 @@ e
 ne
 n
 take pen from backpack
+take backpack
+call backpack H
 n
 n
 n
