@@ -20,7 +20,7 @@ write with pen on parchment ';;'
 put parchment into shredder
 
 take parchment from shredder
-call last "TESTB"
+call last in me "TESTB"
 write with pen on TESTB "think TESTB"
 write with pen on TESTB "take all from scale"
 write with pen on TESTB "put A onto scale"
@@ -36,7 +36,7 @@ write with pen on TESTB "put DIVIDE into B"
 write with pen on TESTB "obey parchment in first in scale"
 
 take parchment from shredder
-call last "DIVIDE"
+call last in me "DIVIDE"
 write with pen on DIVIDE "think DIVIDE"
 write with pen on DIVIDE "take dirt from T"
 write with pen on DIVIDE "put dirt into B"
@@ -51,7 +51,7 @@ write with pen on DIVIDE "put B onto scale"
 write with pen on DIVIDE "obey parchment in first in scale"
 
 take parchment from shredder
-call last "SUBTRACT"
+call last in me "SUBTRACT"
 write with pen on SUBTRACT "think SUBTRACT"
 write with pen on SUBTRACT "dig from B with shovel"
 write with pen on SUBTRACT "put dirt into T"

@@ -26,14 +26,6 @@ class Vessel:
     else:
       return [o for o in self.items if o.match(q)]
 
-  def findRecursive(self, q):
-    q = [q[0]]
-    return self.find(q) or sum([i.find(q) for i in self.items], [])
-
-  def findOne(self, q):
-    items = self.find(q)
-    return items[0] if len(items) == 1 else None
-
   def move(self, dest, *message):
     container = dest
     while container:
@@ -255,12 +247,9 @@ class Verb:
       if parameter['type'] == 'str':
         arguments[parameter['name']] = input.pop(0)
       else:
-        roots = [subject]
-        if not parameter['held']: roots.insert(0, subject.location)
-        ob = subject.resolve(input,
-                             roots,
-                             parameter['multi'],
-                             parameter['type'])
+        root = subject if parameter['held'] else subject.location
+        ob = subject.resolve(input, root,
+                             parameter['multi'], parameter['type'])
         if not ob:
           return
         arguments[parameter['name']] = ob
@@ -287,7 +276,7 @@ class Entity(Item):
     self.active = True
     self.stack = []
 
-  def resolve(self, q, roots, multi=False, type=None):
+  def resolve(self, q, root, multi=False, type=None):
     item = q.pop(0)
     if item == 'self':
       return self
@@ -295,16 +284,15 @@ class Entity(Item):
       return self.location
     if q and q[0] == 'in':
       q.pop(0)
-      roots = self.resolve(q, roots)
-      if not roots:
+      root = self.resolve(q, root)
+      if not root:
         return say("I don't see a", repr(item), "there.")
-      if roots: roots = [roots]
     if item == 'all':
       if not multi:
         return say("You can't use 'all' in this context.")
-      objs = roots[0].items[:]
+      objs = root.items[:]
     else:
-      objs = sum([r.find([item]) for r in roots], [])[:1]
+      objs = root.find([item])[:1]
     if not objs:
       return say('What ' + item + '?')
     elif not multi and len(objs) > 1:
@@ -801,7 +789,7 @@ VERBOSE = False
 def say(*args):
   if VERBOSE:
     for s in Cap(' '.join([str(a) for a in args])).split('\n'):
-      sys.stderr.write(textwrap.fill(s) + '\n')
+      sys.stdout.write(textwrap.fill(s) + '\n')
 
 def output(lines):
   print '\n'.join(lines)
