@@ -20,7 +20,7 @@ Any further parameters passed on the command line appear within the
 adventure somewhere. I won't spoil it by telling you where.
 """
 
-import sys, random, getopt, textwrap, shlex, fileinput
+import sys, random, getopt, textwrap, shlex, fileinput, math
 
 
 ROOMS = { }  # Mapping from room names to rooms
@@ -792,6 +792,47 @@ class ScaleButton(Furniture):
     label.write('\n'.join(scale.writing))
     say("Skrzzzzzzztkrrrrrzt... ", Cap(label.describe(True)), 'emerges.')
 ScaleButton('red button', mailroom, "It's an inviting red button ergonomically positioned on the postal scale.")
+
+#-----------------------------------------------------------------------------#
+
+Room('More hallway',
+     "The hallway from the south ends at a door to the north, and there are doors to the east and west as well.",
+     { 'south': 'Hallway',
+       'west': 'Kitchen',
+       'east': 'Cubicles' })
+
+#-----------------------------------------------------------------------------#
+
+Room('Cubicles',
+     "You are in a maze of cubibles, all alike.",
+     { 'north': 'Cubicles',
+       'south': 'Cubicles',
+       'east': 'Cubicles',
+       'west': 'Cubicles' })
+
+#-----------------------------------------------------------------------------#
+
+Room('Kitchen',
+     "You stand in a small kitchen and break room. There's a sink and a cupboard and a toaster oven, and a motivational poster on the wall with a picture of a kitten and the words 'GET BACK TO WORK'.",
+     { 'east': 'More hallway' })
+cupboard = Furniture('cupboard', 'Kitchen',
+                     "Just a cupboard.",
+                     capacity=float('inf'),
+                     closed=True)
+class Pan(Item):
+  def onTake(self, item, source):
+    if item.type != 'dirt':
+      item.move(source)
+      return say('You cant put the', item, 'there.')
+    elif self.items:
+      excess = self.items[0].qty - self.capacity
+      if excess > 0:
+        say('The', self, 'is chock full.')
+        Item('dirt', source).qty = excess
+        self.items[0].qty = self.capacity
+Pan('pie tin', cupboard, "A circular pie tin, suitable for pies.",
+    capacity=math.pi)
+Pan('cake pan', cupboard, "A square cake pan.", capacity=math.sqrt(2))
 
 #=============================================================================#
 
