@@ -495,6 +495,11 @@ class Entity(Item):
   def tell(self, whom, speech):
     whom.onHear(speech, self)
 
+  Verb('TALK TO whom')
+  def talk(self, whom):
+    say('"Hello", you say.')
+    whom.onHear("Hello", self)
+
   Verb('TAKE *items')
   def take(self, items):
     for item in items:
@@ -748,8 +753,18 @@ Room('Chamber',
        'north': 'North chamber',
        'east': 'East chamber',
        'west': 'West chamber' })
-Entity('robot', 'Chamber',
-       "Picure Bender from Futurama, without the drinking problem. That's pretty much this robot. Not that he's without his problems though; his problem is overenthusiasm.").name = 'Floyd'
+class Robot(Entity):
+  def onHear(self, speech, source):
+    self.stack.append(source)
+    self.active = True
+    for line in speech.split(';'):
+      if not self.active:
+        break
+      say('>' * (len(self.stack)+1), line)
+      self.parse(line)
+    self.stack.pop()
+Robot('robot', 'Chamber',
+      "Picure Bender from Futurama, without the drinking problem. That's pretty much this robot. Not that he's without his problems though; his problem is overenthusiasm.").name = 'Floyd'
 
 #-----------------------------------------------------------------------------#
 
