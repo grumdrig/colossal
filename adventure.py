@@ -17,9 +17,6 @@ class Vessel:
   def find(self, q):
     if not q:
       return []
-    elif q[0].lower() == 'all':
-      q.pop(0)
-      return [i for i in self.items if not (i.fixed or i.mobile)]
     elif q[0].lower() == 'first':
       q.pop(0)
       return [i for i in self.items if not (i.fixed or i.mobile)][:1]
@@ -99,6 +96,11 @@ class Room(Vessel):
 
   def __str__(self):
     return self.name
+
+  def find(self, q):
+    return Vessel.find(self, q) or sum([i.find(q)
+                                        for i in self.items
+                                        if i.fixed or i.mobile], [])
 
   def describe(self, brief=False):
     if brief:
@@ -253,8 +255,11 @@ class Verb:
       if parameter['type'] == 'str':
         arguments[parameter['name']] = input.pop(0)
       else:
-        root = subject if parameter['held'] else subject.location
-        ob = subject.resolve(input, root, parameter['multi'],
+        roots = [subject]
+        if not parameter['held']: roots.insert(0, subject.location)
+        ob = subject.resolve(input,
+                             roots,
+                             parameter['multi'],
                              parameter['type'])
         if not ob:
           return
@@ -282,7 +287,7 @@ class Entity(Item):
     self.active = True
     self.stack = []
 
-  def resolve(self, q, root, multi=False, type=None):
+  def resolve(self, q, roots, multi=False, type=None):
     item = q.pop(0)
     if item == 'self':
       return self
@@ -290,27 +295,26 @@ class Entity(Item):
       return self.location
     if q and q[0] == 'in':
       q.pop(0)
-      root = self.resolve(q, root)
-      if not root:
+      roots = self.resolve(q, roots)
+      if not roots:
         return say("I don't see a", repr(item), "there.")
-    objs = root.findRecursive([item])
+      if roots: roots = [roots]
+    if item == 'all':
+      if not multi:
+        return say("You can't use 'all' in this context.")
+      objs = roots[0].items[:]
+    else:
+      objs = sum([r.find([item]) for r in roots], [])[:1]
     if not objs:
       return say('What ' + item + '?')
     elif not multi and len(objs) > 1:
-      return say('Which ' + items + '?')
+      return say('Which ' + item + '?')
     if type:
       for obj in objs:
         if type != obj.type:
           return say('The', obj, "can't be used for that.")
     return objs if multi else objs[0]
       
-
-  def XXXresolve(self, item, location=None):
-      location = location or self.location
-      items = location.find([item])
-      if not items:
-        items = sum([i.find([item]) for i in location.items], [])
-      return items and items[0] or None
 
   Verb('INVENTORY')
   def inventory(self):
