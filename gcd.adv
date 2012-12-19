@@ -13,24 +13,20 @@ ne
 n
 take pen from backpack
 n
-
-n
-
 n
 n
-
+n
 write with pen on parchment ';;'
 put parchment into shredder
 
 take parchment from shredder
-call last in me "TESTB"
+call last "TESTB"
 write with pen on TESTB "think TESTB"
 write with pen on TESTB "take all from scale"
 write with pen on TESTB "put A onto scale"
 write with pen on TESTB "put B onto scale"
 write with pen on TESTB "call first in scale A"
 write with pen on TESTB "call last in scale B"
-write with pen on TESTB "l A;l B"
 write with pen on TESTB "take A"
 write with pen on TESTB "put H onto scale"
 write with pen on TESTB "take parchment from A"
@@ -40,11 +36,10 @@ write with pen on TESTB "put DIVIDE into B"
 write with pen on TESTB "obey parchment in first in scale"
 
 take parchment from shredder
-call last in me "DIVIDE"
+call last "DIVIDE"
 write with pen on DIVIDE "think DIVIDE"
 write with pen on DIVIDE "take dirt from T"
-write with pen on DIVIDE "put dirt in me into B"
-write with pen on DIVIDE "l B"
+write with pen on DIVIDE "put dirt into B"
 write with pen on DIVIDE "take all from scale"
 write with pen on DIVIDE "take parchment from A"
 write with pen on DIVIDE "take parchment from B"
@@ -56,10 +51,10 @@ write with pen on DIVIDE "put B onto scale"
 write with pen on DIVIDE "obey parchment in first in scale"
 
 take parchment from shredder
-call last in me "SUBTRACT"
+call last "SUBTRACT"
 write with pen on SUBTRACT "think SUBTRACT"
 write with pen on SUBTRACT "dig from B with shovel"
-write with pen on SUBTRACT "put dirt in me into T"
+write with pen on SUBTRACT "put dirt into T"
 write with pen on SUBTRACT "dig from A with shovel"
 write with pen on SUBTRACT "drop dirt in me"
 write with pen on SUBTRACT "take all from scale"
@@ -81,11 +76,10 @@ call first in cauldron A
 take A from cauldron
 call first in cauldron B
 take B from cauldron
-i
 se
 obey TESTB
 
-think DONE
+think "I've got the result in A. Now to print it out."
 nw
 w
 n
@@ -100,26 +94,18 @@ e
 put label into drain
 
 quit
-l scale
-l TESTB
-l parchment in first in scale
-obey parchment in first in scale
-l scale
-quit
-put A into balance
-put B into balance
-l balance
-call first in balance A
-call last from balance B
-take A
-i
-put H into balance
-put DONE in H
-put DIVIDE in A
-obey parchment in first in scale
 
+This implements Euler's algorithm to compute greatest common divisor:
 
-quit
+given a, b with a > b
+repeat:
+  divide a by b
+  if remainder == 0:
+    GCD is b
+  else
+    let a = b, b = r
+
+Here's the basic Adventure implementation:
 
 TEST-B:
   sort so A >= B
@@ -139,48 +125,5 @@ SUBTRACT:
   B says SUBTRACT
   H says DIVIDE
 
-
-
-
-10:
-
-until A is lighter than B:
-  empty the B bag into bag T until its empty. for each shovelful, take
-  a shovelful out of A
-
-Procedure X:
-  If bag A is empty, the answer is in B
-  Otherwise, dirt from A -> B, dirt from T -> A, GOTO 10
-
-
-bag H:
-  0.5 kg dirt
-  
-
-Procedure Y:
-  
-  dig with shovel from B
-  put dirt in T
-  dig with shovel from A
-  drop dirt
-
-  if B is empty:
-    do Procedure X
-  else:
-    do Y
-
-do that last test by having a 1/2 kg bag of dirt with procedure X
-put procedure Y in bag B
-
-
-
-
-a > b
-repeat:
-  divide a by b
-  if remainder == 0:
-    GCD is b
-  else
-    let a = b, b = r
 
 
