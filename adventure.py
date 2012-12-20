@@ -165,9 +165,9 @@ class Item(Vessel):
       self.adjective = None
     self.type = TYPES.get(self.noun, self.noun)
     global ADJECTIVES
-    NOUNS.add(self.noun)
+    NOUNS.add(self.noun.lower())
     if self.adjective:
-      ADJECTIVES.add(self.adjective)
+      ADJECTIVES.add(self.adjective.lower())
     self._name = None
     self.fixed = False
     self.mobile = False
@@ -210,7 +210,7 @@ class Item(Vessel):
   @name.setter
   def name(self, name):
     if name:
-      NAMES.add(name)
+      NAMES.add(name.lower())
     self._name = name
 
   def write(self, text):
@@ -313,17 +313,16 @@ class Itemspec:
     self.noun = None
     self.name = None
     self.selector = None
-    if q and q[0] in ('all','first','last'):
-      self.selector = q.pop(0)
-    if q and q[0] in ADJECTIVES:
-      self.adjective = q.pop(0)
-    if q and q[0] in NOUNS:
-      self.noun = q.pop(0)
-    if q and q[0] == 'called':
-      q.pop(0)
+    def q0(ws):
+      return (q and q[0].lower() in ws and q.pop(0)) or None
+    q0(['the'])
+    self.selector = q0(('all','first','last'))
+    self.adjective = q0(ADJECTIVES)
+    self.noun = q0(NOUNS)
+    if q0(['called']):
       self.name = q and q.pop(0)
-    if not (self.adjective or self.noun or self.name) and q and q[0] in NAMES:
-      self.name = q.pop(0)
+    if not (self.adjective or self.noun or self.name):
+      self.name = q0(NAMES)
 
   def __bool__(self):
     return not not (self.adjective or self.noun or self.name or self.selector)
@@ -364,10 +363,10 @@ class Entity(Item):
       q.pop(0)
       root = self.resolve(q, root)
       if not root:
-        return say("I don't see a", repr(spec), "there.")
+        return say("I don't see a", spec, "there.")
     objs = root.find(spec)
     if not objs:
-      return say('What ' + repr(spec) + '?')
+      return say('What ' + str(spec) + '?')
     elif len(objs) > 1 and spec.selector != 'all':
       return say('Which ' + str(spec) + '?')
     if type:
@@ -523,6 +522,10 @@ class Entity(Item):
   Verb('XYZZY')
   def xyzzy(self):
     say('Nothing happens.')
+
+  Verb('HELLO')
+  def hello(self):
+    say('Uh...hello.')
 
   Verb('QUIT')
   def quit(self):
