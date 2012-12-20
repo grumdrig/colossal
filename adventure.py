@@ -103,6 +103,7 @@ class Vessel(object):
   def onClose(self): pass
   def onHear(self, speech, source): say('It seems not to hear.')
   def onPush(self): say("That doesn't appear to do anything.")
+  def onRub(self): say("That doesn't do much. Maybe its a little shinier?")
 
   
 
@@ -540,6 +541,10 @@ class Entity(Item):
   def push(self, item):
     item.onPush()
 
+  Verb('RUB item')
+  def rub(self, item):
+    item.onRub(self)
+
   Verb('OBEY orders')
   def obey(self, orders):
     self.stack.append(orders)
@@ -688,10 +693,36 @@ Item('soul', 'Crossroads')
 
 Room('Dunno...',
      "I'm not sure what we're looking at here. I just don't know how to describe it. It's just...\nThe road continues north-south. Other than that it's just really indescribable. (Sorry.)",
-     { 'north': 'TODO',
+     { 'north': 'Bend',
        'south': 'Crossroads' })
 Item('something', 'Dunno...',
      'What the hell is this thing?')
+
+#-----------------------------------------------------------------------------#
+
+Room('Bend',
+     "The road bends sharply south-to-east here, but a trail of camel shit leads north into some sort of stone-walled enclosure.",
+     { 'north': 'Caravanserai',
+       'south': 'Dunno',
+       'east': 'More road' })
+
+#-----------------------------------------------------------------------------#
+
+Room('Caravanserai',
+     'You stand in a large square walled enclosure. The middle is an open cobbled courtyard, which is surrounded on all sides by roofed stalls. Most of these contain fodder for camels and just camels and camel drovers doing camel stuff. One stall that catches your eye is floored in rich carpets.',
+     { 'in': 'Stall',
+       'south': 'Bend',
+       'out': 'Bend' })
+
+#-----------------------------------------------------------------------------#
+
+Room('Stall',
+     "This particular stall stands out from the rest due to it's rich appointments. Silk hangings enclose it, and ornate rugs carpet the floor.",
+     { 'out': 'Caravanserai' })
+class Lamp(Item):
+  def onRub(self, rubber):
+    say("Haha. That does absolutely nothi- Oh, crapsticks! Wait! An actual genie appears! Aw, just kidding.")
+Lamp("golden lamp", 'Stall')
 
 #-----------------------------------------------------------------------------#
 
@@ -768,6 +799,12 @@ class Robot(Entity):
     self.stack.pop()
 Robot('robot', 'Chamber',
       "Picure Bender from Futurama, without the drinking problem. That's pretty much this robot. Not that he's without his problems though; his problem is overenthusiasm.").name = 'Floyd'
+
+#-----------------------------------------------------------------------------#
+
+Room('West chamber',
+     "I haven't decided what this room looks like. Come back later.",
+     { 'east': 'Chamber' })
 
 #-----------------------------------------------------------------------------#
 

@@ -2,38 +2,32 @@
 
 
 
-
-
-
-
-
-
-
+                                                        Elevator
                                                             |
                                                             |
-                                            Break rm - More hallway
-                                             pans
+                                             Breakrm - More hallway - Cubicles
+                                              pans
                                                             |
                                             Exec office - Hallway - Bathroom
                                              file cab                 drain
                                                             |
                                                          Reception - Supply
-                                                          shred      postal
+                                                          shredr     postal
                                                             |
                                                           N Chamber
                                                             |
-                                             W Chamber - Chamber - E chamber
-                                                          floyd     cauldron
-                                                            |          \
-                                                         Narrow pass   Justice
-                                                            |           balance
-                                                            |
-           TODO                                        Cave foyer
-                                                         bpack
+          Stall                              W Chamber - Chamber - E chamber
+           lamp                                lamp       floyd     cauldron
+            //                                              |          \
+       Caravanserai                                     Narrow pass   Justice
+             |                                              |           balance
+             |                                              |
+           Bend   -   More road                         Cave foyer
+             |                                            bpack
              |                                              |
           Dunno..      Inside house                      Mouth cave
           sthing        trophycase                       
-             |            i/o                            /
+             |             //                            /
 Tar pit - Crossroads - Outside house - Dirt road - Fork 
             satan         mbox          shovel    
                                                          \
