@@ -922,8 +922,46 @@ ScaleButton('red button', mailroom, "It's an inviting red button ergonomically p
 Room('More hallway',
      "The hallway from the south ends at a door to the north, and there are doors to the east and west as well.",
      { 'south': 'Hallway',
+       'north': 'Stairs - Ground floor',
        'west': 'Kitchen',
        'east': 'Cubicles' })
+
+#-----------------------------------------------------------------------------#
+
+def ordinal(floor):
+  return str(floor) if floor >= 0 else 'P' + str(-floor)
+def floorname(floor):
+  if floor == 3:
+    return 'Roof'
+  elif floor == 0:
+    return 'Stairs - Ground floor'
+  else:
+    return 'Stairs - Floor ' + ordinal(floor)
+class Stairs(Room):
+  def __init__(self, floor):
+    exits = { 'down': floorname(floor-1),
+              'up':   floorname(floor+1) }
+    Room.__init__(self, floorname(floor),
+                  "You stand on an echo-y staircase landing. One white-painted, industrial flight spirals upwards, and another leads down. Your level within the building is painted on the wall.",
+                  exits)
+    self.floor = floor
+    Furniture('wall', self).write(ordinal(floor))
+    
+  def onTake(self, whom, source):
+    if whom.type == 'You':
+      if floorname(self.floor-1) not in ROOMS:
+        Stairs(self.floor-1)
+      if floorname(self.floor+1) not in ROOMS:
+        Stairs(self.floor+1)
+
+Stairs(0).exits['south'] = 'More hallway'
+       
+#-----------------------------------------------------------------------------#
+
+Room('Roof',
+     "The wind tosses your long adventurer's hair as you gaze upon the landscape. The world is your oyster, judging by the smell. Or maybe that's the pidgeon coop.",
+     { 'down': 'Stairs - Floor 2' })
+Furniture('pidgeon coop', 'Roof')
 
 #-----------------------------------------------------------------------------#
 
@@ -998,6 +1036,8 @@ ALIASES = {
   'nw': 'northwest',
   'se': 'southeast',
   'sw': 'southwest',
+  'u': 'up',
+  'd': 'down',
   'exit': 'out',
   'enter': 'in',
   'from': 'in',
