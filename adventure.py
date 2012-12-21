@@ -959,9 +959,20 @@ Stairs(0).exits['south'] = 'More hallway'
 #-----------------------------------------------------------------------------#
 
 Room('Roof',
-     "The wind tosses your long adventurer's hair as you gaze upon the landscape. The world is your oyster, judging by the smell. Or maybe that's the pidgeon coop.",
+     "The wind tosses your silky adventurer's hairstyle as you gaze upon the landscape. The world is your oyster, judging by the smell. Or maybe that's the pidgeon coop.",
      { 'down': 'Stairs - Floor 2' })
-Furniture('pidgeon coop', 'Roof')
+coop = Furniture('coop', 'Roof')
+class Pidgeon(Item):
+  def onTake(self, note, source):
+    if note.type != 'parchment':
+      say("You cant attach that to a pidgeon.")
+    else:
+      printout = Item('printout', coop)
+      printout.writing = open(note.writing[0], 'rt').readlines()
+      printout.adjective = "%d-page" % (len(printout.writing) / 35 + 1)
+      printout.name = note.writing[0].split('.')[0]
+      say("You tie the %s to the pidgeon's leg. Suddenly instilled with a sense of purpose, the pidgeon flies off, only to return a minute or two later with a %s in it's beak. It drops the %s inside the coop." % (note, printout, printout.noun))
+Pidgeon('carrier pidgeon', coop, capacity=1)
 
 #-----------------------------------------------------------------------------#
 
