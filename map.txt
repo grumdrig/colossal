@@ -1,8 +1,9 @@
 
 
-
-
-                                                        Elevator
+                                                          Roof
+                                                          coop
+                                                           //
+                                                        Stairway
                                                             |
                                                             |
                                              Breakrm - More hallway - Cubicles
@@ -23,13 +24,16 @@
              |                                              |           balance
              |                                              |
            Bend   -   More road                         Cave foyer
-             |                                            bpack
+             |          mower                              bpack
              |                                              |
           Dunno..      Inside house                      Mouth cave
           sthing        trophycase                       
              |             //                            /
 Tar pit - Crossroads - Outside house - Dirt road - Fork 
-            satan         mbox          shovel    
-                                                         \
+            satan         mbox          shovel      fork
+             |                                           \     /
                                                          G knoll
                                                           ggnoll
+                                                        /       \
+                                                     Field     Deep grass
+                                                     hippie
