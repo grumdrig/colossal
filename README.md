@@ -69,11 +69,11 @@ person narrative mode to cast the player in the role of the hero.
 Hence the command examples given above might elicit responses of this
 sort:
 
-> > go south
-> _You arrive at a fork in the road. There is a key here._
+> > go south  
+> _You arrive at a fork in the road. There is a key here._  
 >   
-> > get key
-> _You pick up the key. You notice something is written on it._
+> > get key  
+> _You pick up the key. You notice something is written on it._  
 
 The narration is paused quite frequently to allow the play to supply
 direction for the avatar in the story. It is the goal of the player to
