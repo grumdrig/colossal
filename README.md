@@ -19,13 +19,13 @@ gamelike fashion. So stop reading this now.
 Still here? Here's a "Hello, World!" script:
 
     go east
-    east
-    ne
-    n
+    go east
+    northeast
+    north
     get all from backpack
     erase page
     write on page with pen "Hello, World!"
-    n
+    north
     n
     n
     n
@@ -44,10 +44,12 @@ Language Specification
 
 A complete specification of the language would be anathema to the
 exploratory spirit of Advntr, so we do not present one here. Some
-amount of explication is in order, however. We'll also dig into the
-relationship between the dual aspects of Advntr as game and language.
+amount of explication is in order, however. First, though, we'll
+briefly consider the narrative structure of interactive fiction, and
+the relationship between the dual aspects of Advntr as game and
+language.
 
-### Prose
+### Prose Games
 
 Advntr's source language follows the tradition of text adventure games
 (aka prose games, or interactive fiction), particularly those
@@ -58,12 +60,10 @@ published by Infocom in the early eighties. The syntax consists of
     > get key
 
 issued to a theoretical narrator, supplying the decisions made by the
-avatar in the story, which is interactively written by the
-interpreter/narrator and the programmer/player.
-
-By one interpretation, then, in a traditional text adventure, the
-narrator tells a story to the human playing the game, using the second
+avatar in the story. A story is thus interactively written by the
+interpreter/narrator and the programmer/player, using the second
 person narrative mode to cast the player in the role of the hero.
+
 Hence the command examples given above might elicit responses of this
 sort:
 
@@ -80,42 +80,24 @@ find a happy ending to the story, from the avatar's point of view.
 So commands alternate with short continuations of the story, commands
 being most typically of the form
 
-    VERB [OBJECT] [PREPOSITIONAL PHRASE]*
+    VERB [OBJECT] [PREPOSITIONAL-PHRASE]*
 
 The implied subject in these commands being "I", the player, as
 represented by his or her avatar. The story continues, separate from
-this whispered suggestion (and here I explicitly supply some of the
-scaffolding around the interaction that is in actuality only implied):
- 
-    NARRATOR: A troll appears from under the bridge... (what do you do
-    now?)
-
-    PLAYER: (I kill the troll!)
-
-    N: ...so you swing your axe at the troll, but you miss!
+this whispered suggestion ("I unlock the chest.").
 
 But at other times, the narrator is forced to pause the story, break
 the fourth wall, and express that the suggestion couldn't be taken due
-to lack of clarity or for some other reason:
-
-    N: A troll appears from under the bridge... (what do you do?)
-
-    P: (I kill the troll!)
-
-    N: (Uh...I'm not sure what you mean. Kill it with what? The axe or
-    the sword?)
-
-    P: (Oh, sorry. With the sword.)
-
-    N: You swing your sword at the troll, and chop his arm off!
+to lack of clarity or for some other reason ("Unlock the chest with
+what?").
 
 
 ### Prosegramming
 
-Advntr, run interactively, uses that same narrative metaphor; but with
-respect to programming, the narration isn't available. The programmer
-is required to either know that the key will be at the fork in the
-road, or to allow for it and/or test for it in some way.
+Advntr, run interactively, stands on that same narrative metaphor;
+but, with respect to programming, the narration isn't available. The
+programmer is required to either know that the key will be at the fork
+in the road, or to allow for it and/or test for it in some way.
 
 For example, a script might read:
 
@@ -135,7 +117,7 @@ there's no access to them.
 ### Procedure Calls
 
 So what control structures are available to the Advenr programmer? The
-most important programming mechanism is procedure calls, which are
+most important programming mechanism is procedure calling, which is
 implemented in-game by writing commands on paper, and later
 instructing the avatar (or some other entity in the game) to obey
 them. These procedures may include instructions to obey other written
@@ -158,13 +140,14 @@ calls. The interpreter can't make sense of notions like "If the key is
 here, take it. Otherwise go north." Procedures are just a sequence of
 commands.
 
-Instead, ambiguities of reference must be used. Game objects can be
-referred to by name or description, or the nouns `first` and `last`
-refer to the first and last objects within a container. Such
-references are used against mechanisms available in the game world, a
-prime example being the balance scale. The balance may contain
-two items, the heavier of the two always moving to the first position.
-This allows for the implementation of the pseudocode:
+Instead, ambiguities of reference, and in-game mechanisms must be
+used. Game objects can be referred to by name or description, or by
+the nouns `first` and `last` which refer to the first and last objects
+within a container. Such references are used against mechanisms
+available in the game world, a prime example being the balance scale.
+The balance may contain two items, the heavier of the two always
+moving to the first position. This allows for the implementation of
+the pseudocode:
 
     if x > y:
       run procedure "win"
