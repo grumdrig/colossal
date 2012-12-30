@@ -8,7 +8,6 @@ ne
 n
 take pen from backpack
 take backpack
-call backpack H
 n
 n
 n
@@ -20,14 +19,13 @@ open cupboard
 take pan
 put dirt into pan
 drop pan
-put dirt into H
+put dirt into backpack
 e
 s
 w
 open cabinet
 take parchment from folder from cabinet
 take folder from cabinet
-call folder T
 e
 s
 
@@ -43,10 +41,10 @@ write with pen on TESTB "put B onto scale"
 write with pen on TESTB "call first in scale A"
 write with pen on TESTB "call last in scale B"
 write with pen on TESTB "take A"
-write with pen on TESTB "put H onto scale"
+write with pen on TESTB "put backpack onto scale"
 write with pen on TESTB "take parchment from A"
 write with pen on TESTB "take parchment from B"
-write with pen on TESTB "take parchment from H"
+write with pen on TESTB "take parchment from backpack"
 write with pen on TESTB "put DIVIDE into B"
 write with pen on TESTB "obey parchment in first in scale"
 
@@ -54,12 +52,12 @@ take first parchment from shredder
 call last in me "DIVIDE"
 erase DIVIDE
 write with pen on DIVIDE "think DIVIDE"
-write with pen on DIVIDE "take dirt from T"
+write with pen on DIVIDE "take dirt from folder"
 write with pen on DIVIDE "put dirt into B"
 write with pen on DIVIDE "take all from scale"
 write with pen on DIVIDE "take parchment from A"
 write with pen on DIVIDE "take parchment from B"
-write with pen on DIVIDE "take parchment from H"
+write with pen on DIVIDE "take parchment from backpack"
 write with pen on DIVIDE "put SUBTRACT into A"
 write with pen on DIVIDE "put TESTB into B"
 write with pen on DIVIDE "put A onto scale"
@@ -71,17 +69,17 @@ call last in me "SUBTRACT"
 erase SUBTRACT
 write with pen on SUBTRACT "think SUBTRACT"
 write with pen on SUBTRACT "dig from B with shovel"
-write with pen on SUBTRACT "put dirt into T"
+write with pen on SUBTRACT "put dirt into folder"
 write with pen on SUBTRACT "dig from A with shovel"
 write with pen on SUBTRACT "drop dirt in me"
 write with pen on SUBTRACT "take all from scale"
 write with pen on SUBTRACT "put B onto scale"
-write with pen on SUBTRACT "put H onto scale"
+write with pen on SUBTRACT "put backpack onto scale"
 write with pen on SUBTRACT "take parchment from A"
 write with pen on SUBTRACT "take parchment from B"
-write with pen on SUBTRACT "take parchment from H"
+write with pen on SUBTRACT "take parchment from backpack"
 write with pen on SUBTRACT "put SUBTRACT into B"
-write with pen on SUBTRACT "put DIVIDE into H"
+write with pen on SUBTRACT "put DIVIDE into backpack"
 write with pen on SUBTRACT "obey parchment in first in scale"
 
 drop pen
@@ -122,7 +120,7 @@ repeat:
   else
     let a = b, b = r
 
-Here's the basic Adventure implementation:
+Here's the basic Colossal implementation:
 
 TEST-B:
   sort so A >= B
