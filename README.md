@@ -1,11 +1,10 @@
-Colossal Tarpit
-===============
+Colossal
+========
 
-Programming is no game...until now! Colossal Tarpit is the text
-adventure that's Turing complete, a prosegramming language. It was
-written to be an entry in the [Dec 2012 PLT Games competition][1],
-which calls for programming languages that can do anything, but never
-should.
+Programming is no game...until now! Colossal is the text adventure
+that's Turing complete, a prosegramming language. It was written as an
+entry in the [Dec 2012 PLT Games competition][1], which calls for
+programming languages that can do anything, but never should.
 
 [1]: http://www.pltgames.com/competition/2012/12
 
@@ -13,7 +12,7 @@ Spoiler Alert
 -------------
 
 The code examples and discussion below are slight spoilers, since the
-means of programming in Adventure is meant to be discovered in a
+means of programming in Colossal is meant to be discovered in a
 gamelike fashion. So stop reading this now.
 
 Still here? Here's a "Hello, World!" script:
@@ -35,7 +34,7 @@ Still here? Here's a "Hello, World!" script:
 
 Now let's run it.
 
-    $ adventure.py -f hello.adv
+    $ colossal.py -f hello.adv
     Hello, World!
 
 
@@ -43,16 +42,16 @@ Language Specification
 ----------------------
 
 A complete specification of the language would be anathema to the
-exploratory spirit of Advntr, so we do not present one here. Some
+exploratory spirit of Colossal, so we do not present one here. Some
 amount of explication is in order, however. First, though, we'll
 briefly consider the narrative structure of interactive fiction, and
-the relationship between the dual aspects of Advntr as game and
+the relationship between the dual aspects of Colossal as game and
 language.
 
 ### Prose Games
 
-Advntr's source language follows the tradition of text adventure games
-(aka prose games, or interactive fiction), particularly those
+Colossal's source language follows the tradition of text adventure
+games (aka prose games, or interactive fiction), particularly those
 published by Infocom in the early eighties. The syntax consists of
 (shorthand) prose commands, e.g.:
 
@@ -76,8 +75,8 @@ sort:
 The narration is paused frequently to allow the player to supply
 direction for the avatar in the story. In a prose game, it is the goal
 of the player to find a happy ending to the story, from the avatar's
-point of view. In the case of Tarpit Adventure, generating the proper
-output given the inputs is what constitutes a happy ending.
+point of view. In the case of Colossal, generating the proper output
+given the inputs is what constitutes a happy ending.
 
 So commands alternate with short continuations of the story, commands
 being most typically of the form
@@ -96,7 +95,7 @@ what?").
 
 ### Prosegramming
 
-Advntr, run interactively, stands on that same narrative metaphor;
+Colossal, run interactively, stands on that same narrative metaphor;
 but, with respect to programming, the narration isn't available. The
 programmer is required to either know that the key will be at the fork
 in the road, or to allow for it and/or test for it in some way.
@@ -113,14 +112,14 @@ and the story will continue from there. The programmer will need to
 know of and account for this possiblity, where it exists.
 
 The interactive responses are something like an development
-environment for an Advntr programmer. In a script running on its own,
-there's no access to them.
+environment for an Colossal programmer. In a script running on its
+own, there's no access to them.
 
 ### Procedure Calls
 
-So what control structures are available to the Advenr programmer? The
-most important programming mechanism is procedure calling, which is
-implemented in-game by writing commands on paper, and later
+So what control structures are available to the Colossal programmer?
+The most important programming mechanism is procedure calling, which
+is implemented in-game by writing commands on paper, and later
 instructing the avatar (or some other entity in the game) to obey
 them. These procedures may include instructions to obey other written
 instruction. Thus, in particular, we have recursion:
@@ -175,8 +174,19 @@ perhaps use quantities of a different material for negative values, or
 have a "positive" and "negative" bag, or use a token of some kind to
 represent sign. Or, perhaps, helium? It's up to you!
 
-### String
+### Strings
 
 Manipulation of character strings is more straightforward: its just
 writing on paper in-game. The text can be manipulated in various ways
 by various in-game devices.
+
+### Status
+
+The game part of the game is primitive. Improvements thereto will
+bring various programmability improvements as well; until then we're
+Turing complete and all that much more a tarpit.
+
+But get in there and play it:
+
+    % python colossal.py
+
