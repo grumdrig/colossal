@@ -60,7 +60,7 @@ published by Infocom in the early eighties. The syntax consists of
     > get key
 
 issued to a theoretical narrator, supplying the decisions made by the
-avatar in the story. A story is thus interactively written by the
+avatar in the story. The story is thus interactively written by the
 interpreter/narrator and the programmer/player, using the second
 person narrative mode to cast the player in the role of the hero.
 
@@ -74,8 +74,10 @@ sort:
     You pick up the key. You notice something is written on it.
 
 The narration is paused frequently to allow the player to supply
-direction for the avatar in the story. It is the goal of the player to
-find a happy ending to the story, from the avatar's point of view.
+direction for the avatar in the story. In a prose game, it is the goal
+of the player to find a happy ending to the story, from the avatar's
+point of view. In the case of Tarpit Adventure, generating the proper
+output given the inputs is what constitutes a happy ending.
 
 So commands alternate with short continuations of the story, commands
 being most typically of the form
