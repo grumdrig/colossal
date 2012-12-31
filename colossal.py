@@ -1,9 +1,7 @@
 #! /usr/bin/python
 
-"""Usage: adventure.py [OPTS] [PARAMETERS]
-
-Runs the Tarpit Adventure, the text adventure that's also a
-programming language.
+"""Usage: colossal.py [OPTS] [PARAMETERS]
+Runs Colossal, the text adventure that's also a programming language.
 
 OPTS:
   -f FILENAME  Perform the steps specified in the file FILENAME
@@ -914,6 +912,7 @@ class ScaleButton(Furniture):
   def onPush(self):
     label = Item('metering label', scale)
     label.write('\n'.join(scale.writing))
+    label.name = scale.writing[0];
     say("Skrzzzzzzztkrrrrrzt... ", Cap(label.describe(True)), 'emerges.')
 ScaleButton('red button', mailroom, "It's an inviting red button ergonomically positioned on the postal scale.")
 
@@ -1072,7 +1071,8 @@ ALIASES = {
 
 def main():
   global FEEDBACK
-  opts,args = getopt.getopt(sys.argv[1:], 'vVqf:h')
+  opts,args = getopt.getopt(sys.argv[1:], 'vVqf:hi')
+  INTERACTIVE = None
   FEEDBACK = None
   FILENAMES = []
   for o,a in opts:
@@ -1084,13 +1084,15 @@ def main():
       FEEDBACK = False
     elif o == '-f':
       FILENAMES.append(a)
+    elif o == '-i':
+      INTERACTIVE = True
     else:
       sys.stderr.write(__doc__)
       sys.exit()
   if FEEDBACK == None and not FILENAMES:
     FEEDBACK = sys.stderr
 
-  say('Welcome to Tarpit Adventure!')
+  say('Welcome to Colossal!')
   say()
 
   player = Player('Outside of a small house')
@@ -1109,7 +1111,7 @@ def main():
 
   if FILENAMES:
     player.execute(fileinput.input(FILENAMES))
-  else:
+  if INTERACTIVE or not FILENAMES:
     player.execute()
 
 if __name__ == '__main__':
