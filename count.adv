@@ -1,30 +1,30 @@
 think "This counts from one to the numerical first command line argument"
-take parchment
 e
 take shovel
 e
 ne
 n
-take pen from backpack
+take all from backpack
 n
 n
 e
-take it from cauldron
-think "inventory is now parchment, shovel, pen, bag of dirt"
-drop parchment
-take parchment
+take first from cauldron
+drop page
+take page
 w
 n
 n
 e
+
 think "add more and more dirt to scale, weighing it each time"
-think "when no more dirt is available, the parchment gets put"
+think "when no more dirt is available, the page gets put"
 think "into the scale and the recursion stops"
-write on parchment with pen "dig in bag with shovel"
-write on parchment with pen "put last in scale"
-write on parchment with pen "push button"
-write on parchment with pen "obey parchment"
-obey parchment
+erase page
+write on page with pen "dig in bag with shovel"
+write on page with pen "put last onto scale"
+write on page with pen "push button"
+write on page with pen "obey page in me"
+obey page
 
 think "we end up with one too many. kludge around it."
 take last from scale
@@ -32,16 +32,18 @@ w
 drop label
 e
 
-think "now take each label to the trophy case and output the number"
+think "Now take each label to the drain and output the number"
+think "By dropping the last and picking up the label,"
+think "we drop the page when there's no more labels."
 take dirt from scale
-take parchment from scale
-erase parchment
-write on parchment with pen "take first from scale"
-write on parchment with pen "w;n;e"
-write on parchment with pen "put label in pipe"
-write on parchment with pen "w;s;e"
-write on parchment with pen "take first from scale"
-write on parchment with pen "drop last"
-write on parchment with pen "take label"
-write on parchment with pen "obey parchment"
-obey parchment
+take page from scale
+take first from scale
+erase page
+write on page with pen "w;n;e"
+write on page with pen "put label into pipe"
+write on page with pen "w;s;e"
+write on page with pen "take first from scale"
+write on page with pen "drop last"
+write on page with pen "take label"
+write on page with pen "obey page in me"
+obey page
