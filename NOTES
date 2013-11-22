@@ -1,0 +1,40 @@
+Name? Has to sound like a game
+------------------------------
+
+- Adventure
+- Adventuresum
+- Adventurelang
+- Touring Complete
+- Touring Tarpits
+- Tarpits of Terror
+- IF/then
+- Source Adventure
+- Get Key
+- Go East
+- Colossal Tarpit
+- Colossal Code
+- Story Time
+- Floyd
+- Prosegram
+- Sork
+
+Things to name it after:
+
+- Advent
+- Adventure
+- Colossal Cave
+- Infocom
+- Zork
+- prose
+- story
+
+
+Testing loop
+------------
+
+$ loop.py python adventure.py -vf test.adv 1 two 'buckle\ my\ shoe'
+                                                                     
+
+- Negative numbers?
+  - A continer containing a positive bag and a negative bag?
+  - Helium (for weights)

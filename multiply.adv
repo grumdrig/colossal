@@ -1,0 +1,21 @@
+think "Add A * B dirt to the floor of the balance room."
+think "A and B represented by containers with dirt and parchment in them."
+think "C is the floor of the balance room."
+think "Expects you to be standing Outside of a small house"
+think "Expects you to to be holding shovel and pen"
+
+
+quit
+
+Basic algorithm:
+
+ADD:
+  Duplicate A into C
+  T++ B--
+  B says: ADD
+  H says: DONE
+
+DONE:
+  B = T
+  Put dirt wherever
+  Go home

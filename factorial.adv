@@ -1,0 +1,12 @@
+think "Compute A! where A is the a bag of dirt and parchment in inventory"
+think "Assume STP"
+
+
+quit:
+
+Algorithm:
+
+obey multiply
+dig in A
+A>1: obey algorithm
+else: done
