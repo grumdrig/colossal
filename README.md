@@ -2,11 +2,7 @@ Colossal
 ========
 
 Programming is no game...until now! Colossal is the text adventure
-that's Turing complete, a prosegramming language. It was written as an
-entry in the [Dec 2012 PLT Games competition][1], which calls for
-programming languages that can do anything, but never should.
-
-[1]: http://www.pltgames.com/competition/2012/12
+that's Turing complete, a prosegramming language.
 
 Spoiler Alert
 -------------
@@ -28,7 +24,7 @@ Still here? Here's a "Hello, World!" script:
     n
     n
     n
-    n 
+    n
     e
     put page into drain
 
@@ -66,10 +62,10 @@ person narrative mode to cast the player in the role of the hero.
 Hence the command examples given above might elicit responses of this
 sort:
 
-    > go south  
+    > go south
     You arrive at a fork in the road. There is a key here.
-       
-    > get key  
+
+    > get key
     You pick up the key. You notice something is written on it.
 
 The narration is paused frequently to allow the player to supply
